@@ -1,3 +1,6 @@
+"use client";
+
+import { use, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft, PlayCircle } from "lucide-react";
@@ -62,10 +65,10 @@ sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. N
     leftBody: `Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.`,
     rightBody: `Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?`,
     galleryImages: [
-      "/images/Group 36-1.png",
-      "/images/Rectangle 33.png",
-      "/images/Rectangle 34.png",
-      "/images/Rectangle 35.png",
+      "/images/Group 37-1.png",
+      "/images/Rectangle 31.png",
+      "/images/Rectangle 36.png",
+      "/images/Rectangle 37.png",
     ],
     editorialBlocks: [
       {
@@ -104,13 +107,21 @@ sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. N
   },
 };
 
-export default async function EpisodePage({ params }: { params: Promise<{ slug: string }> }) {
-
-  // 3. Kita "tunggu" (await) params-nya sampai datanya siap
-  const resolvedParams = await params;
-
-  // 4. Baru kita ambil slug-nya
+export default function EpisodePage({ params }: { params: Promise<{ slug: string }> }) {
+  // Gunakan fungsi use() untuk membaca parameter secara sinkron di Client Component
+  const resolvedParams = use(params);
   const episode = episodes[resolvedParams.slug as keyof typeof episodes];
+
+  // Setup referensi untuk menangkap elemen carousel
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  // Fungsi untuk menggeser carousel ke kiri/kanan
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = direction === 'left' ? -300 : 300;
+      carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
 
   if (!episode) {
     notFound();
@@ -217,7 +228,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
           </div>
 
           {/* Horizontal Gallery/Carousel */}
-          <div className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-8 items-stretch">
+          <div ref={carouselRef} className="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide pb-8 items-stretch">
             {episode.galleryImages.map((img, index) => (
               <div key={index} className={`shrink-0 ${index === 0 ? 'w-[280px] md:w-[320px]' : 'w-[240px] md:w-[280px]'} aspect-[4/5] bg-[#050505] rounded-xl relative overflow-hidden snap-center group`}>
                 <Image src={img} fill className={`object-cover ${index === 0 ? 'opacity-80 group-hover:opacity-100 transition-opacity' : 'opacity-80'}`} alt={`Gallery Image ${index + 1}`} />
@@ -232,14 +243,14 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
 
           {/* Navigation Controls */}
           <div className="flex justify-center items-center gap-8 mt-6">
-            <button className="text-[#111]/50 hover:text-[#111] transition-colors"><ArrowLeft className="w-5 h-5" /></button>
+            <button onClick={() => scrollCarousel('left')} className="text-[#111]/50 hover:text-[#111] transition-colors"><ArrowLeft className="w-5 h-5" /></button>
             <div className="flex gap-2">
               <span className="w-2 h-2 rounded-full bg-[#111]"></span>
               <span className="w-2 h-2 rounded-full bg-[#111]/30"></span>
               <span className="w-2 h-2 rounded-full bg-[#111]/30"></span>
               <span className="w-2 h-2 rounded-full bg-[#111]/30"></span>
             </div>
-            <button className="text-[#111]/50 hover:text-[#111] transition-colors"><ArrowRight className="w-5 h-5" /></button>
+            <button onClick={() => scrollCarousel('right')} className="text-[#111]/50 hover:text-[#111] transition-colors"><ArrowRight className="w-5 h-5" /></button>
           </div>
 
         </div>

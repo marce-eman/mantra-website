@@ -1,9 +1,23 @@
+"use client"; // 1. Tambahkan ini di baris pertama
+
+import { useRef } from "react"; // 2. Import useRef
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { products } from "@/data/products";
 
 export default function Home() {
+  // 3. Setup referensi untuk menangkap elemen carousel
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  // 4. Fungsi untuk menggeser carousel ke kiri/kanan
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = direction === 'left' ? -350 : 350;
+      carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   const episodeItems = [
     { id: 1, image: "/images/Group 351.png", title: "Fluere Nabulam" },
     { id: 2, image: "/images/Group 361.png", title: "Nocturne Cargo" },
@@ -65,7 +79,6 @@ export default function Home() {
             magnam aliquam voluptatem.
           </p>
 
-          {/* TOMBOL LEARN MORE DIPERBAIKI KE /episodes/1 */}
           <Link
             className="border border-[#4a4a4a] bg-[#050505]/70 backdrop-blur-md text-[#ececec] px-6 py-2 uppercase tracking-[0.2em] text-[7px] font-bold hover:bg-white hover:text-black transition-all duration-300 rounded-full flex items-center gap-2"
             href="/#collection"
@@ -137,18 +150,27 @@ export default function Home() {
         <div className="relative w-full">
           {/* Left Arrow */}
           <div className="absolute left-4 md:left-8 top-1/2 -translate-y-1/2 z-20">
-            <button className="w-10 h-10 border border-[#1f1f1f] bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-[#ececec]/60 hover:text-white hover:bg-[#1f1f1f] transition-all">
+            <button
+              onClick={() => scrollCarousel('left')}
+              className="w-10 h-10 border border-[#1f1f1f] bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-[#ececec]/60 hover:text-white hover:bg-[#1f1f1f] transition-all"
+            >
               <ArrowRight className="w-4 h-4 rotate-180" />
             </button>
           </div>
           {/* Right Arrow */}
           <div className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 z-20">
-            <button className="w-10 h-10 border border-[#1f1f1f] bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-[#ececec]/60 hover:text-white hover:bg-[#1f1f1f] transition-all">
+            <button
+              onClick={() => scrollCarousel('right')}
+              className="w-10 h-10 border border-[#1f1f1f] bg-black/50 backdrop-blur-md rounded-full flex items-center justify-center text-[#ececec]/60 hover:text-white hover:bg-[#1f1f1f] transition-all"
+            >
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide pl-16 pr-16 md:pl-24 md:pr-24 space-x-6 pb-8 items-stretch">
+          <div
+            ref={carouselRef}
+            className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide pl-16 pr-16 md:pl-24 md:pr-24 space-x-6 pb-8 items-stretch"
+          >
             {episodeItems.map((item) => (
               <div key={item.id} className="shrink-0 flex items-center gap-4 snap-center group">
                 {/* Rotated label */}
@@ -264,7 +286,7 @@ export default function Home() {
               <div className="flex flex-col gap-6">
                 <Link
                   href="/episodes/1"
-                  className="relative overflow-hidden rounded-2xl border border-[#1f1f1f]/80 group aspect-[4/3] bg-black/30 block"
+                  className="relative overflow-hidden rounded-2xl border border-[#1f1f1f]/80 group aspect-[4/3] bg-black/30 block cursor-pointer"
                 >
                   <Image
                     src="/images/Rectangle 26.png"
@@ -277,7 +299,7 @@ export default function Home() {
 
                 <Link
                   href="/episodes/2"
-                  className="relative overflow-hidden rounded-2xl border border-[#1f1f1f]/80 group aspect-[4/3] bg-black/30 block"
+                  className="relative overflow-hidden rounded-2xl border border-[#1f1f1f]/80 group aspect-[4/3] bg-black/30 block cursor-pointer"
                 >
                   <Image
                     src="/images/Rectangle 27.png"
@@ -292,7 +314,7 @@ export default function Home() {
               {/* Kolom 2: Gambar Portrait Pertama (Wanita) */}
               <Link
                 href="/episodes/3"
-                className="relative overflow-hidden rounded-2xl border border-[#1f1f1f]/80 group aspect-[3/4] bg-black/30 block"
+                className="relative overflow-hidden rounded-2xl border border-[#1f1f1f]/80 group aspect-[3/4] bg-black/30 block cursor-pointer"
               >
                 <Image
                   src="/images/Rectangle 28.png"
@@ -306,7 +328,7 @@ export default function Home() {
               {/* Kolom 3: Gambar Portrait Kedua (Motor) */}
               <Link
                 href="/episodes/4"
-                className="relative overflow-hidden rounded-2xl border border-[#1f1f1f]/80 group aspect-[3/4] bg-black/30 block"
+                className="relative overflow-hidden rounded-2xl border border-[#1f1f1f]/80 group aspect-[3/4] bg-black/30 block cursor-pointer"
               >
                 <Image
                   src="/images/Rectangle 29.png"
