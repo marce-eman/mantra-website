@@ -14,7 +14,7 @@ const episodes = {
 sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.`,
     rightBody: `Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?`,
     galleryImages: [
-      "/images/Group 35.png",
+      "/images/Group 351.png",
       "/images/Rectangle 33.png",
       "/images/Rectangle 31.png",
       "/images/Rectangle 35.png",
@@ -34,12 +34,12 @@ sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. N
     no: "002",
     title: "Fabric & Form",
     subtitle: "Opus Arcanum — Article No.002",
-    heroImage: "/images/article card 1.png",
+    heroImage: "/images/ARTICLES STORIES2.png",
     leftBody: `Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.`,
     rightBody: `Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?`,
     galleryImages: [
       "/images/Group 36.png",
-      "/images/Rectangle 27.png",
+      "/images/Rectangle 37.png",
       "/images/Rectangle 29.png",
       "/images/Rectangle 31.png",
     ],
@@ -58,7 +58,7 @@ sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. N
     no: "003",
     title: "Behind the Void",
     subtitle: "Opus Arcanum — Article No.003",
-    heroImage: "/images/pexels-wendelmoretti-1925630 1.png",
+    heroImage: "/images/ARTICLES STORIES3.png",
     leftBody: `Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.`,
     rightBody: `Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?`,
     galleryImages: [
@@ -82,7 +82,7 @@ sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. N
     no: "004",
     title: "Arcanum Jacket",
     subtitle: "Opus Arcanum — Article No.004",
-    heroImage: "/images/Group 44.png",
+    heroImage: "/images/ARTICLES STORIES4.png",
     leftBody: `Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo.`,
     rightBody: `Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur?`,
     galleryImages: [
@@ -100,7 +100,7 @@ sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. N
         imageRight: "/images/Rectangle 31.png",
       },
     ],
-    videoThumb: "/images/ARTICLES STORIES.png",
+    videoThumb: "/images/vid art1.png",
   },
 };
 
