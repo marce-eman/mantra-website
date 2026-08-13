@@ -1,63 +1,91 @@
-import { create } from 'zustand';
-import { Product } from '@/data/products';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
 
-export interface CartItem extends Product {
-  quantity: number;
+export interface CartItem {
+  id: string;
+  cartItemId?: string;
+  name: string;
+  price: number;
+  image: string;
   selectedColor: string;
   selectedSize: string;
+  quantity: number;
 }
 
 interface CartStore {
   items: CartItem[];
-  isOpen: boolean;
   addItem: (item: CartItem) => void;
-  removeItem: (id: string, color: string, size: string) => void;
-  updateQuantity: (id: string, color: string, size: string, quantity: number) => void;
+  removeItem: (keyOrId: string) => void;
+  updateQuantity: (keyOrId: string, quantity: number) => void;
   clearCart: () => void;
-  toggleDrawer: () => void;
+  isDrawerOpen: boolean;
   openDrawer: () => void;
   closeDrawer: () => void;
   getSubtotal: () => number;
 }
 
-export const useCartStore = create<CartStore>((set, get) => ({
-  items: [],
-  isOpen: false,
-  addItem: (newItem) => {
-    set((state) => {
-      const existingItemIndex = state.items.findIndex(
-        (item) => item.id === newItem.id && item.selectedColor === newItem.selectedColor && item.selectedSize === newItem.selectedSize
-      );
-      if (existingItemIndex > -1) {
-        const updatedItems = [...state.items];
-        updatedItems[existingItemIndex].quantity += newItem.quantity;
-        return { items: updatedItems, isOpen: true }; // Open drawer on add
-      }
-      return { items: [...state.items, newItem], isOpen: true }; // Open drawer on add
-    });
-  },
-  removeItem: (id, color, size) => {
-    set((state) => ({
-      items: state.items.filter(
-        (item) => !(item.id === id && item.selectedColor === color && item.selectedSize === size)
-      )
-    }));
-  },
-  updateQuantity: (id, color, size, quantity) => {
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id && item.selectedColor === color && item.selectedSize === size
-          ? { ...item, quantity: Math.max(1, quantity) }
-          : item
-      )
-    }));
-  },
-  clearCart: () => set({ items: [] }),
-  toggleDrawer: () => set((state) => ({ isOpen: !state.isOpen })),
-  openDrawer: () => set({ isOpen: true }),
-  closeDrawer: () => set({ isOpen: false }),
-  getSubtotal: () => {
-    const { items } = get();
-    return items.reduce((total, item) => total + item.price * item.quantity, 0);
-  }
-}));
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      isDrawerOpen: false,
+
+      openDrawer: () => set({ isDrawerOpen: true }),
+      closeDrawer: () => set({ isDrawerOpen: false }),
+
+      addItem: (newItem) =>
+        set((state) => {
+          const key = `${newItem.id}-${newItem.selectedColor}-${newItem.selectedSize}`;
+          const existingIndex = state.items.findIndex(
+            (item) =>
+              (item.cartItemId || `${item.id}-${item.selectedColor}-${item.selectedSize}`) === key
+          );
+
+          if (existingIndex > -1) {
+            const updatedItems = [...state.items];
+            updatedItems[existingIndex].quantity += newItem.quantity;
+            return { items: updatedItems };
+          }
+
+          return {
+            items: [...state.items, { ...newItem, cartItemId: key }],
+          };
+        }),
+
+      removeItem: (keyOrId) =>
+        set((state) => ({
+          items: state.items.filter(
+            (item) =>
+              item.cartItemId !== keyOrId &&
+              `${item.id}-${item.selectedColor}-${item.selectedSize}` !== keyOrId &&
+              item.id !== keyOrId
+          ),
+        })),
+
+      updateQuantity: (keyOrId, quantity) =>
+        set((state) => ({
+          items: state.items
+            .map((item) => {
+              const key = item.cartItemId || `${item.id}-${item.selectedColor}-${item.selectedSize}`;
+              if (key === keyOrId || item.id === keyOrId) {
+                return { ...item, quantity: Math.max(0, quantity) };
+              }
+              return item;
+            })
+            .filter((item) => item.quantity > 0),
+        })),
+
+      clearCart: () => set({ items: [] }),
+
+      getSubtotal: () => {
+        return get().items.reduce(
+          (sum, item) => sum + item.price * item.quantity,
+          0
+        );
+      },
+    }),
+    {
+      name: "mantra-cart-storage",
+    }
+  )
+);

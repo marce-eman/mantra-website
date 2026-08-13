@@ -27,8 +27,7 @@ export default function Footer() {
                 <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
                 <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
                 <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
-                <li><Link href="/account" className="hover:text-white transition-colors">Account</Link></li>
-              </ul>
+                <li><Link href="/account" className="hover:text-white transition-colors">Account</Link></li>              </ul>
             </div>
 
             {/* Column 2: Policy & Payment */}

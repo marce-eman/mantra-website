@@ -1,76 +1,178 @@
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import Image from "next/image";
 import Link from "next/link";
-import { ChevronLeft, CheckCircle2, Circle } from "lucide-react";
+import { redirect } from "next/navigation";
+import { ArrowLeft, CreditCard, ShoppingBag, Truck } from "lucide-react";
 
-export default function OrderTrackingPage({ params }: { params: { id: string } }) {
-  const steps = [
-    { title: "Order Placed", date: "Oct 12, 10:00 AM", completed: true },
-    { title: "Payment Confirmed", date: "Oct 12, 10:15 AM", completed: true },
-    { title: "Processing", date: "Oct 13, 09:00 AM", completed: true },
-    { title: "Shipped", date: "Oct 14, 14:30 PM", completed: true },
-    { title: "Out for Delivery", date: "Pending", completed: false },
-    { title: "Delivered", date: "Pending", completed: false },
-  ];
+export default async function OrderDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const session = await auth();
+  const { id } = await params;
+
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
+
+  const order = await prisma.order.findUnique({
+    where: {
+      id: id,
+      userId: session.user.id,
+    },
+    include: {
+      items: {
+        include: {
+          product: true,
+        },
+      },
+    },
+  });
+
+  if (!order) {
+    redirect("/account/orders");
+  }
+
+  const formattedDate = new Date(order.createdAt).toLocaleDateString("id-ID", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+  const waText = encodeURIComponent(
+    `Halo Admin MANTRA, saya ingin menanyakan status/konfirmasi untuk Order ID: #${order.id.toUpperCase()}`
+  );
 
   return (
-    <div>
-      <Link href="/account/orders" className="inline-flex items-center text-xs text-[#ececec]/60 hover:text-white uppercase tracking-widest mb-6 transition-colors">
-        <ChevronLeft className="w-4 h-4 mr-1" /> Back to Orders
-      </Link>
-      
-      <div className="border-b border-[#1f1f1f] pb-4 mb-8 flex justify-between items-end">
+    <div className="bg-[#111111] border border-[#1f1f1f] p-6 md:p-8 rounded-2xl space-y-8">
+      <div>
+        <Link
+          href="/account/orders"
+          className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-[#ececec]/50 hover:text-white transition-colors font-mono"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Orders
+        </Link>
+      </div>
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-[#1f1f1f] pb-6 gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-[#ececec] uppercase tracking-widest mb-1">
-            Order #{params.id}
-          </h2>
-          <p className="text-[#ececec]/60 text-xs uppercase tracking-widest">
-            Tracking ID: JNE8291038102
+          <span className="text-[10px] uppercase tracking-[0.3em] text-[#ececec]/40 font-mono block">
+            ORDER REFERENCE
+          </span>
+          <h1 className="text-lg md:text-2xl font-mono font-bold tracking-wider text-[#ececec] uppercase">
+            #{order.id.toUpperCase()}
+          </h1>
+          <p className="text-[11px] text-[#ececec]/50 font-mono mt-1">
+            Placed on {formattedDate}
           </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs uppercase tracking-widest text-[#ececec]/50">Status:</span>
+          <span
+            className={`text-xs uppercase tracking-widest font-bold font-mono px-3 py-1 rounded-full border ${
+              order.status === "PAID" || order.status === "COMPLETED" || order.status === "SHIPPED"
+                ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/50"
+                : order.status === "CANCELLED"
+                ? "bg-red-950/50 text-red-400 border-red-800/50"
+                : "bg-amber-950/50 text-amber-400 border-amber-800/50"
+            }`}
+          >
+            {order.status}
+          </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        {/* Tracking Timeline */}
-        <div className="border border-[#1f1f1f] p-6 bg-[#0a0a0a]">
-          <h3 className="text-[#ececec] uppercase tracking-widest font-bold text-sm mb-8">Tracking Status</h3>
-          <div className="space-y-6 relative before:absolute before:inset-0 before:ml-[11px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-[#1f1f1f] before:to-transparent">
-            {steps.map((step, idx) => (
-              <div key={idx} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                <div className={`flex items-center justify-center w-6 h-6 rounded-full border-2 bg-[#050505] z-10 ${step.completed ? 'border-green-500 text-green-500' : 'border-[#1f1f1f] text-[#1f1f1f]'}`}>
-                  {step.completed ? <CheckCircle2 className="w-4 h-4" /> : <Circle className="w-2 h-2 fill-current" />}
-                </div>
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2rem)] p-4 border border-[#1f1f1f] bg-[#050505]">
-                  <div className="flex items-center justify-between mb-1">
-                    <h4 className={`font-bold text-sm uppercase tracking-wider ${step.completed ? 'text-[#ececec]' : 'text-[#ececec]/40'}`}>{step.title}</h4>
+      <div className="space-y-4">
+        <h2 className="text-xs font-bold uppercase tracking-widest text-[#ececec]/50 flex items-center gap-2">
+          <ShoppingBag className="w-4 h-4" /> Purchased Items ({order.items.length})
+        </h2>
+
+        <div className="space-y-3">
+          {order.items.map((item: any) => {
+            const productImage =
+              item.product?.images?.[0] ||
+              item.product?.image ||
+              "/images/placeholder.jpg";
+
+            return (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-4 bg-[#0a0a0a] border border-[#1f1f1f] p-4 rounded-xl"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="relative aspect-square w-14 bg-[#181818] rounded-lg overflow-hidden shrink-0 border border-[#1f1f1f]">
+                    <Image
+                      src={productImage}
+                      alt={item.product?.name || "Product"}
+                      fill
+                      className="object-cover"
+                    />
                   </div>
-                  <time className="text-xs text-[#ececec]/60 font-mono">{step.date}</time>
+                  <div>
+                    <h3 className="text-xs font-medium uppercase tracking-wider text-[#ececec]">
+                      {item.product?.name || "Product"}
+                    </h3>
+                    <p className="text-[10px] text-[#ececec]/40 font-mono mt-1">
+                      {item.quantity} x Rp {item.price.toLocaleString("id-ID")}
+                    </p>
+                  </div>
                 </div>
+
+                <span className="text-xs font-mono font-bold text-emerald-400">
+                  Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                </span>
               </div>
-            ))}
-          </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="bg-[#0a0a0a] border border-[#1f1f1f] p-5 rounded-xl space-y-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-[#ececec]/50 flex items-center gap-2">
+            <Truck className="w-4 h-4" /> Shipping Destination
+          </h2>
+          <p className="text-xs text-[#ececec]/70 font-light leading-relaxed">
+            {order.address || "No shipping address specified."}
+          </p>
         </div>
 
-        {/* Order Details Summary */}
-        <div className="space-y-6">
-          <div className="border border-[#1f1f1f] p-6 bg-[#0a0a0a]">
-            <h3 className="text-[#ececec] uppercase tracking-widest font-bold text-sm mb-4">Items Summary</h3>
-            <div className="flex space-x-4">
-              <div className="relative w-16 h-20 bg-[#111111] border border-[#1f1f1f]">
-                {/* Mock image path */}
-                <img src="/images/Rectangle 26.png" className="object-cover w-full h-full" alt="Item" />
-                <span className="absolute -top-2 -right-2 bg-[#ececec] text-[#050505] text-[10px] w-5 h-5 flex items-center justify-center rounded-full font-bold">1</span>
-              </div>
-              <div className="flex-1 flex flex-col justify-center">
-                <p className="text-[#ececec] text-xs uppercase tracking-widest font-bold mb-1">OPUS ARCANUM T-SHIRT</p>
-                <p className="text-[#ececec]/60 text-[10px] uppercase">Black | L</p>
-                <p className="text-[#ececec] font-mono text-xs mt-2">Rp 450.000</p>
-              </div>
+        <div className="bg-[#0a0a0a] border border-[#1f1f1f] p-5 rounded-xl space-y-3">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-[#ececec]/50 flex items-center gap-2">
+            <CreditCard className="w-4 h-4" /> Payment Summary
+          </h2>
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between text-[#ececec]/60">
+              <span>Subtotal</span>
+              <span className="font-mono">Rp {order.totalAmount.toLocaleString("id-ID")}</span>
             </div>
-            <div className="border-t border-[#1f1f1f] mt-6 pt-4 flex justify-between text-[#ececec] text-sm uppercase tracking-widest font-bold">
-              <span>Total</span>
-              <span className="font-mono">Rp 500.000</span>
+            <div className="border-t border-[#1f1f1f] pt-2 flex justify-between font-bold text-[#ececec]">
+              <span>TOTAL PAID</span>
+              <span className="font-mono text-emerald-400">
+                Rp {order.totalAmount.toLocaleString("id-ID")}
+              </span>
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="p-4 bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p className="text-xs text-[#ececec]/60 font-light">
+          Need help with this order or want to confirm payment?
+        </p>
+        <a
+          href={`https://wa.me/6281234567890?text=${waText}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-[#ececec] text-black px-5 py-2.5 rounded-lg text-xs uppercase tracking-widest font-bold hover:bg-white transition-colors shrink-0 cursor-pointer"
+        >
+          Contact Admin via WhatsApp
+        </a>
       </div>
     </div>
   );
