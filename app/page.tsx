@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import HomeClient from "./HomeClient";
+export const revalidate = 60;
 
 export default async function Home() {
   // Ambil SEMUA episode yang statusnya ACTIVE
