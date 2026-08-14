@@ -21,23 +21,51 @@ export async function createOrderAction(cartItems: any[]) {
       0
     );
 
-    // 1. Buat data Order di Supabase
-    const order = await prisma.order.create({
-      data: {
-        userId: session.user.id,
-        totalAmount: totalAmount,
-        status: "PENDING",
-        // 2. Buat data OrderItem untuk setiap produk
-        items: {
-          create: cartItems.map((item) => ({
-            productId: item.id,
-            quantity: item.quantity,
-            price: item.price,
-            size: item.selectedSize || "M",
-            color: item.selectedColor || "BLACK",
-          })),
+    // Generate Order Number unik (MTR-YYYYMMDD-XXX)
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const randomNum = Math.floor(100 + Math.random() * 900);
+    const orderNumber = `MTR-${dateStr}-${randomNum}`;
+
+    // --- GUNAKAN $TRANSACTION AGAR AMAN ---
+    const order = await prisma.$transaction(async (tx) => {
+      // 1. Buat data Order di Supabase
+      const newOrder = await tx.order.create({
+        data: {
+          orderNumber: orderNumber,
+          userId: session.user.id,
+          recipientName: session.user.name || "Customer",
+          email: session.user.email || "no-email",
+          phone: "-", 
+          address: "-", 
+          totalAmount: totalAmount,
+          status: "PENDING",
+          items: {
+            create: cartItems.map((item) => ({
+              productId: item.id || item.productId,
+              name: item.name || "Produk MANTRA", 
+              quantity: item.quantity,
+              price: item.price,
+              size: item.selectedSize || item.size || "M", 
+              color: item.selectedColor || item.color || "BLACK", 
+            })),
+          },
         },
-      },
+      });
+
+      // 2. KUNCI RAHASIA: POTONG STOK PRODUK OTOMATIS!
+      for (const item of cartItems) {
+        const prodId = item.id || item.productId;
+        await tx.product.update({
+          where: { id: prodId },
+          data: {
+            stock: {
+              decrement: item.quantity // <--- Stok langsung berkurang
+            }
+          }
+        });
+      }
+
+      return newOrder;
     });
 
     return { success: true, orderId: order.id };

@@ -15,9 +15,7 @@ export default function CartDrawer() {
   const subtotal = getSubtotal();
 
   const handleRemoveItem = async (productId: string, itemKey: string) => {
-    // 1. Hapus langsung dari tampilan UI
     removeItem(itemKey);
-    // 2. Hapus dari Supabase DB
     await removeFromCartAction(productId);
   };
 
@@ -30,20 +28,15 @@ export default function CartDrawer() {
       handleRemoveItem(productId, itemKey);
       return;
     }
-    // 1. Update tampilan UI
     updateQuantity(itemKey, newQuantity);
-    // 2. Update jumlah di Supabase DB
     await updateCartQuantityAction(productId, newQuantity);
   };
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/80 backdrop-blur-sm">
-      {/* Background Overlay */}
       <div className="fixed inset-0" onClick={closeDrawer} />
 
-      {/* Drawer Panel */}
       <div className="relative z-10 w-full max-w-md bg-[#0a0a0a] border-l border-[#1f1f1f] h-full flex flex-col p-6 text-[#ececec]">
-        {/* Header */}
         <div className="flex items-center justify-between border-b border-[#1f1f1f] pb-4">
           <h2 className="text-sm font-bold uppercase tracking-widest">Your Cart</h2>
           <button
@@ -54,7 +47,6 @@ export default function CartDrawer() {
           </button>
         </div>
 
-        {/* List Produk / Tampilan Kosong */}
         <div className="flex-1 overflow-y-auto py-6">
           {items.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center px-4">
@@ -95,10 +87,12 @@ export default function CartDrawer() {
                       <p className="text-[10px] text-[#ececec]/50 uppercase tracking-widest mt-0.5">
                         {item.selectedSize} / {item.selectedColor}
                       </p>
+                      
+                      {/* HARGA PER ITEM DIUBAH KE USD */}
                       <p className="text-xs font-mono font-bold text-emerald-400 mt-1">
-                        Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                        ${(item.price * item.quantity).toFixed(2)} USD
                       </p>
-                      {/* Tambah/Kurang Quantity */}
+                      
                       <div className="flex items-center gap-2 mt-2">
                         <button
                           onClick={() => handleUpdateQuantity(item.id, itemKey, item.quantity - 1)}
@@ -115,7 +109,6 @@ export default function CartDrawer() {
                         </button>
                       </div>
                     </div>
-                    {/* Tombol Hapus Barang */}
                     <button
                       onClick={() => handleRemoveItem(item.id, itemKey)}
                       className="text-red-400/70 hover:text-red-400 p-2 cursor-pointer"
@@ -130,14 +123,16 @@ export default function CartDrawer() {
           )}
         </div>
 
-        {/* Footer Checkout */}
         {items.length > 0 && (
           <div className="border-t border-[#1f1f1f] pt-4 space-y-4">
             <div className="flex justify-between text-xs uppercase tracking-widest">
               <span className="text-[#ececec]/60">Subtotal</span>
+              
+              {/* SUBTOTAL DIUBAH KE USD */}
               <span className="font-mono font-bold text-emerald-400">
-                Rp {subtotal.toLocaleString("id-ID")}
+                ${subtotal.toFixed(2)} USD
               </span>
+              
             </div>
             <Link
               href="/checkout"

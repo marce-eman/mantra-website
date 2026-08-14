@@ -205,35 +205,111 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
   );
 }
 
-// --- HALAMAN UTAMA HOME ---
 export default function HomeClient({ episodes }: { episodes: any[] }) {
   const safeEpisodes = episodes && episodes.length > 0 ? episodes : [];
 
   return (
     <div className="flex flex-col min-h-screen">
+
+      {/* --- HERO SECTION --- */}
       <section className="relative h-screen w-full flex items-center justify-center bg-[#050505] overflow-hidden">
-        <div className="absolute inset-0 z-0 flex items-center justify-center">
-          <Image src="/images/pexels-wendelmoretti-1925630(background mata untuk jam).png" alt="Mantra Eye Background" fill className="object-cover object-[center_17%] scale-100 grayscale opacity-100 brightness-100" priority />
+
+        {/* ===================================================== */}
+        {/* MOBILE: MATA + MASK DALAM CONTAINER 1:1              */}
+        {/* ===================================================== */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none md:hidden">
+          <div className="relative w-[150vw] aspect-square flex items-center justify-center">
+
+            {/* GAMBAR MATA MOBILE */}
+            <Image
+              src="/images/pexels-wendelmoretti-1925630(background mata untuk jam).png"
+              alt="Mantra Eye Background"
+              fill
+              className="object-cover object-center grayscale opacity-100 brightness-100 scale-140 translate-y-13"
+              priority
+            />
+
+            {/* MASK MOBILE */}
+            <Image
+              src="/images/MASK.png"
+              alt="Mantra Clock Hero"
+              fill
+              className="object-contain mix-blend-screen opacity-45 contrast-125 scale-120 -translate-y-1"
+              priority
+            />
+
+          </div>
         </div>
-        <div className="absolute inset-0 z-10 flex items-center justify-center pointer-events-none">
+
+
+        {/* ===================================================== */}
+        {/* DESKTOP: MATA FULL SCREEN                             */}
+        {/* ===================================================== */}
+        <div className="hidden md:flex absolute inset-0 z-0 items-center justify-center pointer-events-none">
+
+          <Image
+            src="/images/pexels-wendelmoretti-1925630(background mata untuk jam).png"
+            alt="Mantra Eye Background"
+            fill
+            className="object-cover object-[center_17%] scale-100 grayscale opacity-100 brightness-100"
+            priority
+          />
+
+        </div>
+
+
+        {/* ===================================================== */}
+        {/* DESKTOP: MASK DALAM CONTAINER SQUARE                 */}
+        {/* ===================================================== */}
+        <div className="hidden md:flex absolute inset-0 z-10 items-center justify-center pointer-events-none">
+
           <div className="relative w-full h-full max-w-[400vh] aspect-square">
-            <Image src="/images/MASK.png" alt="Mantra Clock Hero" fill className="object-contain mix-blend-screen opacity-45 contrast-125 scale-120 translate-y-10" priority />
+
+            <Image
+              src="/images/MASK.png"
+              alt="Mantra Clock Hero"
+              fill
+              className="object-contain mix-blend-screen opacity-45 contrast-125 scale-120 translate-y-10"
+              priority
+            />
+
           </div>
+
         </div>
+
+
+        {/* ===================================================== */}
+        {/* CONTENT                                               */}
+        {/* ===================================================== */}
         <div className="relative z-20 text-center flex flex-col items-center max-w-[400px] px-4">
+
           <div className="mb-4 flex justify-center mt-6">
-            <Image alt="Mantra Wordmark Hero" className="object-contain opacity-90 drop-shadow-md" height={24} priority src="/images/WORDMARK CHROME 1.png" width={140} />
+            <Image
+              alt="Mantra Wordmark Hero"
+              className="object-contain opacity-90 drop-shadow-md"
+              height={24}
+              priority
+              src="/images/WORDMARK CHROME 1.png"
+              width={140}
+            />
           </div>
+
           <p className="text-[#ececec] text-[7px] uppercase tracking-[0.25em] mb-6 leading-[2.5] font-medium text-center drop-shadow-md">
-            quis consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. 
-            Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, 
-            adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore 
-            magnam aliquam voluptatem.
+            A manifestation born from the shadows. Where silence meets brutalist form,
+            and identity transcends time. Crafted for those who walk through the void
+            and seek truth within the dark.
           </p>
-          <Link className="border border-[#4a4a4a] bg-[#050505]/70 backdrop-blur-md text-[#ececec] px-6 py-2 uppercase tracking-[0.2em] text-[7px] font-bold hover:bg-white hover:text-black transition-all duration-300 rounded-full flex items-center gap-2" href="/#collection">
-            Learn More <ArrowRight className="w-2.5 h-2.5" />
+
+          <Link
+            className="border border-[#4a4a4a] bg-[#050505]/70 backdrop-blur-md text-[#ececec] px-6 py-2 uppercase tracking-[0.2em] text-[7px] font-bold hover:bg-white hover:text-black transition-all duration-300 rounded-full flex items-center gap-2"
+            href="/#collection"
+          >
+            Learn More
+            <ArrowRight className="w-2.5 h-2.5" />
           </Link>
+
         </div>
+
       </section>
 
       <div id="collection" className="border-y border-[#1f1f1f] bg-[#0a0a0a] py-3 overflow-hidden">

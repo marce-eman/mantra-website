@@ -26,12 +26,16 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // State Form Alamat
+  // State Form Input
+  const [nameInput, setNameInput] = useState(user?.name || "");
+  const [phoneInput, setPhoneInput] = useState("");
   const [addressInput, setAddressInput] = useState(user?.address || "");
 
   const subtotal = getSubtotal();
-  const shipping = 50000; // Fixed shipping rate
-  const total = subtotal + shipping;
+  // Total di website pure hanya total produk, ongkir dihitung terpisah di WA
+  const total = subtotal; 
+
+  const ADMIN_WHATSAPP = "6281234567890"; // Ganti dengan nomor WhatsApp Admin
 
   const handlePlaceOrder = async () => {
     if (items.length === 0) {
@@ -39,8 +43,8 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
       return;
     }
 
-    if (!addressInput.trim()) {
-      setErrorMsg("Please fill in your shipping address.");
+    if (!nameInput.trim() || !addressInput.trim() || !phoneInput.trim()) {
+      setErrorMsg("Please complete all shipping details (Name, Phone, Address).");
       setCurrentStep(1);
       return;
     }
@@ -57,17 +61,32 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
         })),
         totalAmount: total,
         shippingAddress: addressInput,
+        recipientName: nameInput,
+        phone: phoneInput,
       });
 
       if (result.success && result.orderId) {
         clearCart();
+
+        // Template Pesan WA yang Menginfokan Ongkir Dihitung via WA
+        const waMessage = encodeURIComponent(
+          `Hello MANTRA Admin,\nI would like to confirm my order.\n\n` +
+          `*Order ID:* ${(result as any).orderNumber || result.orderId}\n` +
+          `*Name:* ${nameInput}\n` +
+          `*Phone:* ${phoneInput}\n` +
+          `*Subtotal Items:* $${subtotal.toFixed(2)} USD\n` +
+          `*Shipping Fee:* To be calculated via WA\n\n` +
+          `Please calculate total shipping to my address and send payment details. Thank you!`
+        );
+
+        window.open(`https://wa.me/${ADMIN_WHATSAPP}?text=${waMessage}`, "_blank");
         router.push(`/order-success?orderId=${result.orderId}`);
       } else {
-        setErrorMsg(result.error || "Gagal memproses pesanan.");
+        setErrorMsg(result.error || "Failed to process order.");
         setIsSubmitting(false);
       }
     } catch {
-      setErrorMsg("Terjadi kesalahan sistem saat membuat pesanan.");
+      setErrorMsg("System error occurred while creating order.");
       setIsSubmitting(false);
     }
   };
@@ -91,6 +110,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
   return (
     <div className="bg-[#050505] min-h-screen border-t border-[#1f1f1f] py-12 text-[#ececec]">
       <div className="max-w-6xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-12 gap-12">
+        
         {/* Left Column: 3-Step Wizard */}
         <div className="lg:col-span-7 space-y-6">
           {errorMsg && (
@@ -111,7 +131,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
               onClick={() => setCurrentStep(1)}
             >
               <h2 className="uppercase tracking-widest font-bold text-sm">
-                1. Shipping Address
+                1. Shipping Information
               </h2>
               {currentStep > 1 && (
                 <span className="text-emerald-400 text-xs uppercase font-mono">
@@ -121,11 +141,12 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
             </div>
             {currentStep === 1 && (
               <div className="p-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <input
                     type="text"
                     placeholder="Full Name"
-                    defaultValue={user?.name || ""}
+                    value={nameInput}
+                    onChange={(e) => setNameInput(e.target.value)}
                     className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-sm focus:outline-none focus:border-[#ececec] rounded-lg"
                   />
                   <input
@@ -136,17 +157,24 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                     className="w-full bg-[#111111]/50 border border-[#1f1f1f] p-3 text-sm text-[#ececec]/50 rounded-lg cursor-not-allowed"
                   />
                 </div>
+                <input
+                  type="text"
+                  placeholder="Phone Number (WhatsApp Active)"
+                  value={phoneInput}
+                  onChange={(e) => setPhoneInput(e.target.value)}
+                  className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-sm focus:outline-none focus:border-[#ececec] rounded-lg"
+                />
                 <textarea
                   rows={3}
-                  placeholder="Full Address (Street, City, Province, Postal Code)"
+                  placeholder="Full Address (Street, City, State, Postal Code, Country)"
                   value={addressInput}
                   onChange={(e) => setAddressInput(e.target.value)}
                   className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-sm focus:outline-none focus:border-[#ececec] rounded-lg"
                 />
                 <button
                   onClick={() => {
-                    if (!addressInput.trim()) {
-                      setErrorMsg("Please fill in your shipping address.");
+                    if (!nameInput.trim() || !addressInput.trim() || !phoneInput.trim()) {
+                      setErrorMsg("Please fill in all shipping details.");
                       return;
                     }
                     setErrorMsg("");
@@ -191,13 +219,13 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                   />
                   <div className="flex-1">
                     <p className="text-sm uppercase tracking-widest font-bold">
-                      JNE REG / SICEPAT
+                      Standard / Express Shipping
                     </p>
-                    <p className="text-[#ececec]/60 text-xs">
-                      2-3 Business Days
+                    <p className="text-[#ececec]/60 text-xs mt-1">
+                      Shipping cost will be calculated & confirmed via WhatsApp based on your destination.
                     </p>
                   </div>
-                  <p className="font-mono text-xs">Rp 50.000</p>
+                  <p className="font-mono text-xs text-zinc-400">Calculated via WA</p>
                 </label>
                 <button
                   onClick={() => setCurrentStep(3)}
@@ -218,7 +246,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
           >
             <div className="p-6 border-b border-[#1f1f1f]">
               <h2 className="uppercase tracking-widest font-bold text-sm">
-                3. Payment
+                3. Payment Method
               </h2>
             </div>
             {currentStep === 3 && (
@@ -232,7 +260,10 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                   />
                   <div className="flex-1">
                     <p className="text-sm uppercase tracking-widest font-bold">
-                      QRIS / E-Wallet / Bank Transfer
+                      WhatsApp Admin Payment
+                    </p>
+                    <p className="text-[#ececec]/60 text-xs mt-1">
+                      You will be redirected to WhatsApp to confirm order items, shipping costs, and receive payment details.
                     </p>
                   </div>
                 </label>
@@ -242,7 +273,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                   disabled={isSubmitting}
                   className="w-full mt-8 bg-[#ececec] text-[#050505] py-4 uppercase tracking-widest text-xs font-bold hover:bg-white disabled:opacity-50 cursor-pointer transition-colors rounded-lg"
                 >
-                  {isSubmitting ? "Processing..." : "Place Order"}
+                  {isSubmitting ? "Generating Order..." : "Place Order via WhatsApp"}
                 </button>
               </div>
             )}
@@ -279,7 +310,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                       {item.selectedSize} / {item.selectedColor}
                     </p>
                     <p className="text-xs font-mono text-emerald-400 mt-1">
-                      {item.quantity} x Rp {item.price.toLocaleString("id-ID")}
+                      {item.quantity} x ${item.price.toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -289,24 +320,25 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
               <div className="flex justify-between text-[#ececec]/60 uppercase tracking-widest">
                 <span>Subtotal</span>
                 <span className="font-mono text-[#ececec]">
-                  Rp {subtotal.toLocaleString("id-ID")}
+                  ${subtotal.toFixed(2)}
                 </span>
               </div>
               <div className="flex justify-between text-[#ececec]/60 uppercase tracking-widest">
                 <span>Shipping</span>
-                <span className="font-mono text-[#ececec]">
-                  Rp {shipping.toLocaleString("id-ID")}
+                <span className="font-mono text-zinc-400 italic">
+                  Calculated via WA
                 </span>
               </div>
               <div className="border-t border-[#1f1f1f] pt-3 flex justify-between uppercase tracking-widest font-bold text-sm">
-                <span>Total</span>
+                <span>Total Items</span>
                 <span className="font-mono text-emerald-400">
-                  Rp {total.toLocaleString("id-ID")}
+                  ${total.toFixed(2)} USD
                 </span>
               </div>
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );

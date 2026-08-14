@@ -35,7 +35,7 @@ export default async function OrderDetailPage({
     redirect("/account/orders");
   }
 
-  const formattedDate = new Date(order.createdAt).toLocaleDateString("id-ID", {
+  const formattedDate = new Date(order.createdAt).toLocaleDateString("en-US", {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -44,7 +44,7 @@ export default async function OrderDetailPage({
   });
 
   const waText = encodeURIComponent(
-    `Halo Admin MANTRA, saya ingin menanyakan status/konfirmasi untuk Order ID: #${order.id.toUpperCase()}`
+    `Hello Admin MANTRA, I would like to ask about the status and shipping details for my Order ID: #${order.orderNumber || order.id.toUpperCase()}`
   );
 
   return (
@@ -64,7 +64,7 @@ export default async function OrderDetailPage({
             ORDER REFERENCE
           </span>
           <h1 className="text-lg md:text-2xl font-mono font-bold tracking-wider text-[#ececec] uppercase">
-            #{order.id.toUpperCase()}
+            #{order.orderNumber || order.id.toUpperCase()}
           </h1>
           <p className="text-[11px] text-[#ececec]/50 font-mono mt-1">
             Placed on {formattedDate}
@@ -77,7 +77,7 @@ export default async function OrderDetailPage({
             className={`text-xs uppercase tracking-widest font-bold font-mono px-3 py-1 rounded-full border ${
               order.status === "PAID" || order.status === "COMPLETED" || order.status === "SHIPPED"
                 ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/50"
-                : order.status === "CANCELLED"
+                : order.status === "CANCELED"
                 ? "bg-red-950/50 text-red-400 border-red-800/50"
                 : "bg-amber-950/50 text-amber-400 border-amber-800/50"
             }`}
@@ -118,13 +118,13 @@ export default async function OrderDetailPage({
                       {item.product?.name || "Product"}
                     </h3>
                     <p className="text-[10px] text-[#ececec]/40 font-mono mt-1">
-                      {item.quantity} x Rp {item.price.toLocaleString("id-ID")}
+                      {item.quantity} x ${item.price.toFixed(2)}
                     </p>
                   </div>
                 </div>
 
                 <span className="text-xs font-mono font-bold text-emerald-400">
-                  Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                  ${(item.price * item.quantity).toFixed(2)} USD
                 </span>
               </div>
             );
@@ -148,31 +148,39 @@ export default async function OrderDetailPage({
           </h2>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between text-[#ececec]/60">
-              <span>Subtotal</span>
-              <span className="font-mono">Rp {order.totalAmount.toLocaleString("id-ID")}</span>
+              <span>Items Amount</span>
+              <span className="font-mono">${order.totalAmount.toFixed(2)} USD</span>
             </div>
             <div className="border-t border-[#1f1f1f] pt-2 flex justify-between font-bold text-[#ececec]">
-              <span>TOTAL PAID</span>
+              <span>TOTAL ITEMS</span>
               <span className="font-mono text-emerald-400">
-                Rp {order.totalAmount.toLocaleString("id-ID")}
+                ${order.totalAmount.toFixed(2)} USD
               </span>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-4 bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4">
-        <p className="text-xs text-[#ececec]/60 font-light">
-          Need help with this order or want to confirm payment?
+      <div className="p-5 bg-[#0a0a0a] border border-[#1f1f1f] rounded-xl flex flex-col space-y-4">
+        <p className="text-xs text-[#ececec]/60 font-light text-center md:text-left">
+          Need help with this order, or want to track its current location?
         </p>
-        <a
-          href={`https://wa.me/6281234567890?text=${waText}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="bg-[#ececec] text-black px-5 py-2.5 rounded-lg text-xs uppercase tracking-widest font-bold hover:bg-white transition-colors shrink-0 cursor-pointer"
-        >
-          Contact Admin via WhatsApp
-        </a>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link
+            href="/track"
+            className="flex-1 border border-[#2a2a2a] bg-[#111111] hover:bg-[#1a1a1a] text-[#ececec] text-center px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-bold transition-colors cursor-pointer"
+          >
+            Public Tracking Page
+          </Link>
+          <a
+            href={`https://wa.me/6281234567890?text=${waText}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black text-center px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-bold transition-colors cursor-pointer"
+          >
+            Chat Admin via WhatsApp
+          </a>
+        </div>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Search, LogIn } from "lucide-react";
 
 export default function NotFound() {
   const [time, setTime] = useState({ h: 0, m: 0, s: 0 });
@@ -38,7 +39,6 @@ export default function NotFound() {
   );
 
   return (
-    // Fixed overlay — covers the inherited root layout Navbar + Footer
     <div className="fixed inset-0 z-[9999] bg-[#050505] flex flex-col items-center justify-center overflow-hidden">
 
       {/* Top ticker */}
@@ -54,8 +54,7 @@ export default function NotFound() {
       </div>
 
       {/* Clock — dead center */}
-      <div className="relative z-20 flex items-center justify-center w-[88vw] max-w-[680px] aspect-square">
-        {/* Clock image */}
+      <div className="relative z-20 flex items-center justify-center w-[75vw] max-w-[480px] aspect-square">
         <Image
           src="/images/Jam Mantra.png"
           alt="Mantra Clock"
@@ -66,7 +65,6 @@ export default function NotFound() {
 
         {/* Live clock hands */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-          {/* Hour */}
           <div
             className="absolute bottom-1/2 left-1/2 origin-bottom"
             style={{
@@ -77,7 +75,6 @@ export default function NotFound() {
               transition: "transform 0.5s ease",
             }}
           />
-          {/* Minute */}
           <div
             className="absolute bottom-1/2 left-1/2 origin-bottom"
             style={{
@@ -88,7 +85,6 @@ export default function NotFound() {
               transition: "transform 0.5s ease",
             }}
           />
-          {/* Second */}
           <div
             className="absolute bottom-1/2 left-1/2 origin-bottom"
             style={{
@@ -99,27 +95,35 @@ export default function NotFound() {
               transition: "transform 0.2s ease",
             }}
           />
-          {/* Center pivot */}
           <div className="absolute w-3 h-3 rounded-full bg-[#c0c0c0] shadow-lg z-10" />
         </div>
 
-        {/* "OPEN ONLY ON FRIDAYS" inside clock face */}
         <div className="absolute bottom-[28%] left-1/2 -translate-x-1/2 z-20 pointer-events-none text-center">
-          <p className="text-[#ececec]/70 text-[11px] sm:text-sm uppercase tracking-[0.25em] whitespace-nowrap font-light">
+          <p className="text-[#ececec]/70 text-[11px] sm:text-xs uppercase tracking-[0.25em] whitespace-nowrap font-light">
             OPEN ONLY <strong className="font-bold text-[#ececec]">ON FRIDAYS</strong>
           </p>
         </div>
       </div>
 
-      {/* Return link */}
-      <div className="relative z-20 mt-10">
+      {/* TOMBOL AKSES KHUSUS HARI TUTUP */}
+      <div className="relative z-20 mt-6 flex flex-col sm:flex-row items-center gap-3">
         <Link
-          href="/"
-          className="text-[#ececec]/30 hover:text-[#ececec] text-[10px] uppercase tracking-widest transition-colors border border-[#1f1f1f] hover:border-[#ececec]/30 px-8 py-3"
+          href="/login?redirect=/account/orders"
+          className="inline-flex items-center gap-2 text-[#ececec]/70 hover:text-white text-[10px] uppercase tracking-widest transition-all border border-[#1f1f1f] bg-[#0a0a0a] hover:bg-[#111111] hover:border-[#ececec]/40 px-6 py-3 rounded-xl"
         >
-          Return to the void
+          <LogIn className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Access My Orders</span>
+        </Link>
+
+        <Link
+          href="/track"
+          className="inline-flex items-center gap-2 text-[#ececec]/70 hover:text-white text-[10px] uppercase tracking-widest transition-all border border-[#1f1f1f] bg-[#0a0a0a] hover:bg-[#111111] hover:border-[#ececec]/40 px-6 py-3 rounded-xl"
+        >
+          <Search className="w-3.5 h-3.5 text-zinc-400" />
+          <span>Track Parcel</span>
         </Link>
       </div>
+
     </div>
   );
 }

@@ -32,7 +32,7 @@ export default async function OrderPaymentPolicyPage() {
           </p>
         </div>
 
-        {/* Dynamic Banner Action (Cek Login Status) */}
+        {/* Dynamic Banner Action */}
         <div className="p-6 bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <ShoppingBag className="w-5 h-5 text-emerald-400 shrink-0" />
@@ -61,7 +61,7 @@ export default async function OrderPaymentPolicyPage() {
             <CreditCard className="w-5 h-5 text-[#ececec]/40" />
             <h2 className="text-xs font-bold uppercase tracking-widest">ACCEPTED PAYMENTS</h2>
             <p className="text-[11px] text-[#ececec]/50 font-light leading-relaxed">
-              Bank Transfer (BCA/Mandiri) & Instant QRIS for seamless checkout.
+              International and local payments are processed securely via direct links provided by our Admin.
             </p>
           </div>
 
@@ -69,15 +69,15 @@ export default async function OrderPaymentPolicyPage() {
             <ShieldCheck className="w-5 h-5 text-[#ececec]/40" />
             <h2 className="text-xs font-bold uppercase tracking-widest">VERIFICATION</h2>
             <p className="text-[11px] text-[#ececec]/50 font-light leading-relaxed">
-              Automatic payment verification via Midtrans / Manual confirmation within 1 hour.
+              Manual confirmation by our Admin via WhatsApp after payment is successfully transferred.
             </p>
           </div>
 
           <div className="bg-[#111111] border border-[#1f1f1f] p-5 rounded-2xl space-y-2">
             <RefreshCw className="w-5 h-5 text-[#ececec]/40" />
-            <h2 className="text-xs font-bold uppercase tracking-widest">ORDER MODIFICATION</h2>
+            <h2 className="text-xs font-bold uppercase tracking-widest">MODIFICATION</h2>
             <p className="text-[11px] text-[#ececec]/50 font-light leading-relaxed">
-              Orders cannot be modified once payment is verified and handed to the courier.
+              Orders cannot be modified once payment is verified and handed to the shipping courier.
             </p>
           </div>
         </div>
@@ -93,7 +93,7 @@ export default async function OrderPaymentPolicyPage() {
               HOW TO PLACE AN ORDER
             </h3>
             <p>
-              Select your desired piece, choose the size/color variation, and add it to your cart. Proceed to checkout, enter your shipping destination, and select your preferred payment method. Items are locked only after checkout is initiated.
+              Select your desired piece, choose the size/color variation, and add it to your cart. Proceed to checkout and enter your shipping destination. Once the order is generated, you will be redirected to WhatsApp to communicate directly with our team for shipping calculations.
             </p>
           </div>
 
@@ -105,7 +105,7 @@ export default async function OrderPaymentPolicyPage() {
               PAYMENT EXPIRATION
             </h3>
             <p>
-              Manual bank transfers and QRIS codes remain active for 24 hours. Unpaid orders will be automatically canceled by the system to release stock back to the catalogue.
+              Your order ID and allocated stock will remain active for 24 hours after being created. Unpaid orders will be automatically canceled by the system to release stock back to the catalogue.
             </p>
           </div>
 
@@ -117,8 +117,8 @@ export default async function OrderPaymentPolicyPage() {
               UNDERSTANDING STATUSES
             </h3>
             <ul className="list-disc pl-5 space-y-1 text-[#ececec]/60">
-              <li><strong className="text-[#ececec]">PENDING:</strong> Order created, awaiting payment confirmation.</li>
-              <li><strong className="text-[#ececec]">PAID / PROCESSING:</strong> Payment received; item is being packed and prepared for shipping.</li>
+              <li><strong className="text-[#ececec]">PENDING:</strong> Order created, awaiting payment confirmation from Admin.</li>
+              <li><strong className="text-[#ececec]">PROCESSING:</strong> Payment received; item is being packed.</li>
               <li><strong className="text-[#ececec]">SHIPPED:</strong> Package handed to courier; tracking number assigned.</li>
               <li><strong className="text-[#ececec]">CANCELLED:</strong> Expiry time exceeded or manually voided.</li>
             </ul>

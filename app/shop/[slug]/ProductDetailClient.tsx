@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCartStore } from "@/store/useCartStore";
 import { cn } from "@/lib/utils";
-// Tambahkan ChevronLeft untuk tombol mundur
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { addToCartAction } from "@/app/actions/cart";
 
@@ -33,12 +32,10 @@ export default function ProductDetailClient({ product }: { product: ProductProps
   const [quantity] = useState(1);
   const [error, setError] = useState("");
 
-  // Fungsi untuk menggeser gambar ke kiri (Prev)
   const handlePrevImage = () => {
     setSelectedImage((prev) => (prev === 0 ? product.images.length - 1 : prev - 1));
   };
 
-  // Fungsi untuk menggeser gambar ke kanan (Next)
   const handleNextImage = () => {
     setSelectedImage((prev) => (prev === product.images.length - 1 ? 0 : prev + 1));
   };
@@ -59,7 +56,7 @@ export default function ProductDetailClient({ product }: { product: ProductProps
     const result = await addToCartAction(product.id, quantity);
 
     if (!result.success) {
-      setError(result.error || "Gagal menambah ke keranjang.");
+      setError(result.error || "Failed to add item to cart.");
       return;
     }
 
@@ -67,7 +64,7 @@ export default function ProductDetailClient({ product }: { product: ProductProps
       ...product,
       image: product.images[0] || "/images/placeholder.jpg",
       quantity,
-      selectedColor: "Exclusive", // Fallback text karena di cart mungkin masih butuh valuenya
+      selectedColor: "Exclusive",
       selectedSize,
     });
   };
@@ -109,8 +106,6 @@ export default function ProductDetailClient({ product }: { product: ProductProps
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24">
           {/* Image Gallery */}
           <div className="space-y-4">
-            
-            {/* Tambahkan class "group" di wrapper utama gambar ini */}
             <div className="relative aspect-[3/4] w-full border border-[#1f1f1f] bg-[#111111] overflow-hidden group">
               <Image 
                 src={product.images[selectedImage] || "/images/placeholder.jpg"} 
@@ -120,7 +115,6 @@ export default function ProductDetailClient({ product }: { product: ProductProps
                 priority
               />
               
-              {/* Tombol Kiri & Kanan muncul kalau gambar lebih dari 1 */}
               {product.images.length > 1 && (
                 <>
                   <button 
@@ -139,7 +133,7 @@ export default function ProductDetailClient({ product }: { product: ProductProps
               )}
             </div>
 
-            {/* Thumbnail Bawah */}
+            {/* Thumbnail */}
             {product.images.length > 1 && (
               <div className="grid grid-cols-4 gap-4">
                 {product.images.map((img, idx) => (
@@ -163,8 +157,10 @@ export default function ProductDetailClient({ product }: { product: ProductProps
             <h1 className="text-3xl md:text-5xl font-black text-[#ececec] uppercase tracking-widest mb-4">
               {product.name}
             </h1>
+            
+            {/* TAMPILAN HARGA USD (SUDAH DIUBAH) */}
             <p className="text-[#ececec] font-mono text-xl md:text-2xl mb-8">
-              Rp {product.price.toLocaleString('id-ID')}
+              ${product.price.toFixed(2)} USD
             </p>
 
             <div className="prose prose-invert border-y border-[#1f1f1f] py-6 mb-8">
@@ -173,7 +169,7 @@ export default function ProductDetailClient({ product }: { product: ProductProps
               </p>
             </div>
 
-            {/* Selectors - HANYA SIZE SAJA */}
+            {/* Size Selector */}
             <div className="space-y-6 mb-8">
               <div>
                 <div className="flex justify-between items-center mb-3">
@@ -230,11 +226,11 @@ export default function ProductDetailClient({ product }: { product: ProductProps
               </button>
             </div>
             
-            {/* Shipping Info */}
+            {/* Shipping Info (SUDAH DIUBAH KE USD/INTERNATIONAL) */}
             <div className="mt-8 text-xs text-[#ececec]/40 uppercase tracking-widest leading-loose">
-              <p>• Free shipping on orders over Rp 1,500,000.</p>
+              <p>• Worldwide shipping available. Rates calculated at checkout.</p>
               <p>• Returns accepted within 14 days of delivery.</p>
-              <p>• Ships within 24-48 hours via premium courier.</p>
+              <p>• Ships within 24-48 hours via express courier.</p>
             </div>
           </div>
         </div>

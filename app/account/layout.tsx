@@ -13,14 +13,34 @@ export default async function AccountLayout({
   const session = await auth();
 
   if (!session?.user?.id) {
-    redirect("/login?redirect=/account");
+    redirect("/login?redirect=/account/orders");
   }
 
-  // Cek secara aman ke database apakah user ini adalah ADMIN
+  // Ambil data user sekaligus menghitung total pesanannya di database
   const dbUser = await prisma.user.findUnique({
     where: { id: session.user.id },
+    include: {
+      _count: {
+        select: { orders: true }
+      }
+    }
   });
+
   const isAdmin = dbUser?.role === "ADMIN";
+  const hasOrders = (dbUser?._count?.orders ?? 0) > 0;
+
+  // Cek Hari (0 = Minggu, 5 = Jumat)
+  const today = new Date().getDay();
+  const isFriday = today === 5;
+
+  // ---------------------------------------------------------
+  // LOGIKA AKSES HARI NON-JUMAT
+  // ---------------------------------------------------------
+  // Jika ini bukan hari Jumat, bukan Admin, dan TIDAK punya pesanan:
+  // Tolak akses dan kembalikan ke halaman depan (Home)
+  if (!isFriday && !isAdmin && !hasOrders) {
+    redirect("/?error=closed_no_orders"); 
+  }
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#ececec] pt-24 pb-20 px-6 md:px-12 border-t border-[#1f1f1f]">
@@ -37,10 +57,10 @@ export default async function AccountLayout({
             </h1>
           </div>
           <Link
-            href="/shop"
+            href="/"
             className="inline-flex items-center gap-2 text-xs uppercase tracking-widest text-[#ececec]/60 hover:text-white transition-colors font-mono"
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to Shop
+            <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
           </Link>
         </div>
 
@@ -49,14 +69,19 @@ export default async function AccountLayout({
           
           {/* Sidebar Nav */}
           <aside className="md:col-span-3 space-y-2">
-            <Link
-              href="/account"
-              className="flex items-center gap-3 px-4 py-3 bg-[#0a0a0a] border border-[#1f1f1f] hover:border-[#ececec]/40 rounded-xl text-xs uppercase tracking-widest transition-colors"
-            >
-              <User className="w-4 h-4 text-emerald-400" />
-              <span>Profile Details</span>
-            </Link>
+            
+            {/* Tampilkan Profile & Address HANYA jika hari Jumat atau Admin */}
+            {(isFriday || isAdmin) && (
+              <Link
+                href="/account"
+                className="flex items-center gap-3 px-4 py-3 bg-[#0a0a0a] border border-[#1f1f1f] hover:border-[#ececec]/40 rounded-xl text-xs uppercase tracking-widest transition-colors"
+              >
+                <User className="w-4 h-4 text-emerald-400" />
+                <span>Profile Details</span>
+              </Link>
+            )}
 
+            {/* Menu Orders (Selalu tampil untuk yang lolos filter) */}
             <Link
               href="/account/orders"
               className="flex items-center gap-3 px-4 py-3 bg-[#0a0a0a] border border-[#1f1f1f] hover:border-[#ececec]/40 rounded-xl text-xs uppercase tracking-widest transition-colors"
@@ -65,13 +90,16 @@ export default async function AccountLayout({
               <span>My Orders</span>
             </Link>
 
-            <Link
-              href="/account/addresses"
-              className="flex items-center gap-3 px-4 py-3 bg-[#0a0a0a] border border-[#1f1f1f] hover:border-[#ececec]/40 rounded-xl text-xs uppercase tracking-widest transition-colors"
-            >
-              <MapPin className="w-4 h-4 text-emerald-400" />
-              <span>Shipping Address</span>
-            </Link>
+            {/* Tampilkan Address HANYA jika hari Jumat atau Admin */}
+            {(isFriday || isAdmin) && (
+              <Link
+                href="/account/addresses"
+                className="flex items-center gap-3 px-4 py-3 bg-[#0a0a0a] border border-[#1f1f1f] hover:border-[#ececec]/40 rounded-xl text-xs uppercase tracking-widest transition-colors"
+              >
+                <MapPin className="w-4 h-4 text-emerald-400" />
+                <span>Shipping Address</span>
+              </Link>
+            )}
 
             {/* --- TOMBOL KHUSUS ADMIN --- */}
             {isAdmin && (
