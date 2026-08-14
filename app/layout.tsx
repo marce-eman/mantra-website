@@ -9,6 +9,8 @@ import { Providers } from "@/components/Providers";
 import { StoreNavbarWrapper, StoreBottomWrapper } from "@/components/StoreUIWrapper"; // <--- Import file baru
 import "./globals.css";
 
+export const revalidate = 60;
+
 export default async function RootLayout({
   children,
 }: {
