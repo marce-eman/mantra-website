@@ -16,6 +16,10 @@ export default function LoginPage() {
   const [popupMessage, setPopupMessage] = useState<string | null>(null);
   const [authStatus, setAuthStatus] = useState<string>("idle");
 
+  // State untuk OTP
+  const [showOtp, setShowOtp] = useState(false);
+  const [otpInput, setOtpInput] = useState("");
+
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -78,6 +82,7 @@ export default function LoginPage() {
     });
   };
 
+  // --- SUBMIT FORM UTAMA ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -85,8 +90,6 @@ export default function LoginPage() {
     setAuthStatus("idle");
 
     try {
-      const hasBiometrics = await checkBiometricSupport();
-
       // ========= FORGOT PASSWORD =========
       if (activeTab === "forgot") {
         if (!email) throw new Error("Please enter your email address.");
@@ -101,6 +104,7 @@ export default function LoginPage() {
         if (!res.ok) throw new Error(data.error || "Failed to send reset link.");
 
         setPopupMessage("Password reset link has been dispatched to your email address.");
+        setLoading(false);
         return;
       }
 
@@ -122,23 +126,25 @@ export default function LoginPage() {
 
         if (!res.ok) throw new Error(data.error || "Registration failed.");
 
-        if (hasBiometrics) {
-          try {
-            await triggerBiometricRegistration(email, name);
-          } catch {
-            console.log("Biometric skipped.");
-          }
-        }
-
-        setAuthStatus("idle");
-        setActiveTab("signin");
-        setPopupMessage("Registration successful! Please sign in with your credentials.");
-        return;
-
+        // Jika registrasi awal sukses, tahan dulu dan kirim OTP
+        const otpRes = await fetch("/api/auth/send-otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        
+        if (!otpRes.ok) throw new Error("Failed to send verification code to your email.");
+        
+        setShowOtp(true); // Munculkan pop-up OTP
+        setLoading(false);
+        return; // Berhenti di sini nunggu user masukin OTP
+      } 
+      
       // ========= SIGN IN =========
-      } else if (activeTab === "signin") {
+      if (activeTab === "signin") {
         if (!email || !password) throw new Error("Please enter email and password.");
 
+        // 1. Cek kecocokan password ke API
         const checkRes = await fetch("/api/auth/check-password", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -153,6 +159,8 @@ export default function LoginPage() {
 
         if (!checkRes.ok) throw new Error(checkData.error || "Authentication failed.");
 
+        // 2. Jika password benar, langsung tembak Biometrik (Passkey/Face ID)
+        const hasBiometrics = await checkBiometricSupport();
         if (hasBiometrics) {
           try {
             await triggerBiometricLogin();
@@ -161,6 +169,7 @@ export default function LoginPage() {
           }
         }
 
+        // 3. Login sukses, buat session NextAuth
         setAuthStatus("success");
         const result = await signIn("credentials", { email, password, redirect: false });
         if (result?.error) throw new Error(`Session Error: ${result.error}`);
@@ -170,6 +179,44 @@ export default function LoginPage() {
     } catch (err: any) {
       setPopupMessage(err.message);
       setAuthStatus("idle");
+      setLoading(false);
+    }
+  };
+
+  // --- VERIFIKASI OTP (KHUSUS REGISTRASI) ---
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setPopupMessage(null);
+
+    try {
+      // Pengecekan OTP ke API
+      const res = await fetch("/api/auth/verify-otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp: otpInput }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "OTP verification failed.");
+
+      // JIKA OTP BENAR, LANJUT SETUP BIOMETRIK LALU PINDAH KE SIGN IN
+      setShowOtp(false); // Tutup pop-up
+      const hasBiometrics = await checkBiometricSupport();
+
+      if (hasBiometrics) {
+        try { 
+          await triggerBiometricRegistration(email, name); 
+        } catch { 
+          console.log("Biometric skipped."); 
+        }
+      }
+      
+      setAuthStatus("idle");
+      setActiveTab("signin");
+      setPopupMessage("Registration, Verification & Passkey setup successful! Please sign in.");
+      
+    } catch (err: any) {
+      setPopupMessage(err.message);
     } finally {
       setLoading(false);
     }
@@ -177,6 +224,8 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center px-4 py-12 relative overflow-hidden">
+      
+      {/* --- POP-UP NOTIFIKASI ERROR / SUCCESS --- */}
       {popupMessage && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-300">
           <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl p-6 md:p-8 max-w-sm w-full text-center shadow-2xl">
@@ -197,6 +246,40 @@ export default function LoginPage() {
         </div>
       )}
 
+      {/* --- POP-UP OTP INPUT --- */}
+      {showOtp && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-300">
+          <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl">
+            <div className="w-12 h-12 border border-[#1f1f1f] bg-[#111111] rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-5 h-5 text-[#ececec]" />
+            </div>
+            <h3 className="text-[#ececec] text-sm uppercase tracking-widest font-serif mb-2">Verification Sent</h3>
+            <p className="text-[10px] text-[#ececec]/50 font-mono uppercase tracking-widest text-center mb-6">
+              Enter the 6-digit code sent to your email.
+            </p>
+            <form onSubmit={handleVerifyOtp} className="space-y-4">
+              <input 
+                type="text" 
+                maxLength={6}
+                required
+                value={otpInput}
+                onChange={(e) => setOtpInput(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder="000000" 
+                className="w-full bg-[#111111] border border-[#1f1f1f] text-[#ececec] px-4 py-3.5 rounded-xl text-center text-xl tracking-[0.5em] focus:outline-none focus:border-[#ececec]/40 transition-colors font-mono" 
+              />
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-[#ececec] hover:bg-white text-black font-bold py-3.5 px-6 rounded-xl transition-all text-[10px] uppercase tracking-widest cursor-pointer flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify & Continue"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* --- POP-UP BIOMETRIK --- */}
       {authStatus === "verifying" && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-300">
           <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl flex flex-col items-center">
@@ -211,6 +294,7 @@ export default function LoginPage() {
 
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#ffffff] opacity-[0.02] blur-[120px] rounded-full pointer-events-none" />
 
+      {/* --- FORM UTAMA KOTAK --- */}
       <div className="relative z-10 w-full max-w-[440px] bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl shadow-2xl overflow-hidden p-8 md:p-10">
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 border border-[#1f1f1f] bg-[#111111] rounded-full flex items-center justify-center mb-4 overflow-hidden relative p-2 shadow-inner">
