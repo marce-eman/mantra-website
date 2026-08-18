@@ -12,16 +12,25 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({ where: { email } });
 
-    if (!user || !user.password) {
+    // 1. Jika email benar-benar tidak ada di DB
+    if (!user) {
       return NextResponse.json({ error: "Account not found. Please register." }, { status: 404 });
     }
 
+    // 2. Jika email ada tapi terdaftar via Google (password masih NULL)
+    if (!user.password) {
+      return NextResponse.json(
+        { error: "This account was registered using Google. Please sign in with Google or set a password via Forgot Password." },
+        { status: 400 }
+      );
+    }
+
+    // 3. Verifikasi Password
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return NextResponse.json({ error: "Invalid password." }, { status: 401 });
     }
 
-    // Jika password benar, kirim sinyal sukses agar frontend bisa memicu Passkey
     return NextResponse.json({ status: "SUCCESS", userId: user.id, userName: user.name });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -11,12 +11,29 @@ export async function POST(req: Request) {
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
+
     if (existingUser) {
-      return NextResponse.json({ error: "Email is already registered. Please sign in." }, { status: 400 });
+      // Jika user sudah ada DAN sudah punya password -> Tolak (memang duplikat)
+      if (existingUser.password) {
+        return NextResponse.json({ error: "Email is already registered. Please sign in." }, { status: 400 });
+      }
+
+      // Jika user sudah ada dari Google (password masih NULL) -> Hubungkan akun & simpan password baru
+      const hashedPassword = await bcrypt.hash(password, 10);
+      const updatedUser = await prisma.user.update({
+        where: { email },
+        data: {
+          name: name || existingUser.name,
+          whatsapp: phone || existingUser.whatsapp,
+          password: hashedPassword,
+        },
+      });
+
+      return NextResponse.json({ success: true, userId: updatedUser.id, linked: true });
     }
 
+    // Jika akun baru murni
     const hashedPassword = await bcrypt.hash(password, 10);
-
     const newUser = await prisma.user.create({
       data: {
         name,
