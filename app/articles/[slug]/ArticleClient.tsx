@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ArrowLeft, PlayCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, PlayCircle, XCircle } from "lucide-react";
 
 export default function ArticleClient({ article, recommendedEpisode }: { article: any; recommendedEpisode: any }) {
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   const scrollCarousel = (direction: 'left' | 'right') => {
     if (carouselRef.current) {
@@ -15,20 +16,21 @@ export default function ArticleClient({ article, recommendedEpisode }: { article
     }
   };
 
-  // KUNCI: Cek apakah artikel memang benar-benar KOSONG/TIDAK ADA di database (misal link salah)
+  // --- FUNGSI PINTAR: Convert Link YouTube Biasa Jadi Embed ---
+  const getEmbedUrl = (url: string) => {
+    if (!url || url === "#") return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}?autoplay=1` : null;
+  };
+
   const isDummy = !article;
 
-  // --- DATA MAPPING YANG AMAN DARI "OVERRIDE" ---
-  // Jika artikel asli dari database ada tapi kosong, maka akan tetap dirender kosong ("").
-  // Teks dummy HANYA muncul jika URL mengarah ke artikel fiktif (isDummy).
   const no = article?.articleNo || "001";
   const title = article?.articleTitle || article?.name || (isDummy ? "The Architecture of Shadows" : "");
   const subtitle = article?.articleSubtitle || `Opus Arcanum — Article No.${no}`;
   const heroImage = article?.heroImage || article?.images?.[0] || "/images/ARTICLES STORIES.png";
-  
-  // Teks intro sudah berdiri sendiri, tidak perlu leftBody.split() lagi
   const introBody = article?.storyIntro || (isDummy ? "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit." : "");
-  
   const leftBody = article?.storyLeft || (isDummy ? "sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit." : "");
   const rightBody = article?.storyRight || (isDummy ? "Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?" : "");
   
@@ -37,6 +39,8 @@ export default function ArticleClient({ article, recommendedEpisode }: { article
     : ["/images/Group 351.png", "/images/Rectangle 33.png", "/images/Rectangle 31.png", "/images/Rectangle 35.png"];
 
   const videoThumb = article?.videoThumb || "/images/vid art1.png";
+  const videoUrl = article?.videoUrl || "#"; 
+  const embedUrl = getEmbedUrl(videoUrl);
 
   const blockData = {
     image: article?.editorialImage || "/images/Rectangle 31.png",
@@ -49,8 +53,35 @@ export default function ArticleClient({ article, recommendedEpisode }: { article
   const episodeTitle = article?.episode?.title || "OPUS ARCANUM";
   const episodeNo = article?.episode?.episodeNo || "01";
 
+  // ==========================================
+  // KOMPONEN MODAL VIDEO (POP-UP)
+  // ==========================================
+  const VideoModal = () => (
+    isVideoOpen && embedUrl ? (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 md:p-12 animate-in fade-in duration-300">
+        <div className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-[#1f1f1f]">
+          <button
+            onClick={() => setIsVideoOpen(false)}
+            className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-black/60 hover:bg-red-900/80 border border-[#1f1f1f] text-[#ececec] px-4 py-2 rounded-full text-[10px] uppercase tracking-widest transition-colors cursor-pointer backdrop-blur-md"
+          >
+            <XCircle className="w-4 h-4 text-red-400" /> Close Video
+          </button>
+          <iframe
+            src={embedUrl}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
+      </div>
+    ) : null
+  );
+
   return (
     <div className="flex flex-col min-h-screen bg-[#050505]">
+      
+      {/* Panggil Modal Videonya di Sini */}
+      <VideoModal />
 
       {/* ─────────────────────────────────────────
           1. HERO SECTION
@@ -69,7 +100,6 @@ export default function ArticleClient({ article, recommendedEpisode }: { article
             <p className="text-[#ececec]/60 text-[10px] uppercase tracking-widest mb-4">
               {subtitle}
             </p>
-            {/* Pakai variabel introBody secara murni, Teks Intro mandiri */}
             <p className="text-[#ececec]/60 text-[10px] leading-relaxed text-justify whitespace-pre-line">
               {introBody} 
             </p>
@@ -79,7 +109,11 @@ export default function ArticleClient({ article, recommendedEpisode }: { article
           </div>
         </div>
 
-        <div className="relative z-10 mt-16 md:mt-24 w-full max-w-3xl mx-6 aspect-[16/9] md:aspect-[21/9] bg-[#111] border border-[#1f1f1f] rounded-xl overflow-hidden group cursor-pointer shadow-2xl">
+        {/* --- TOMBOL PLAY VIDEO HERO --- */}
+        <div 
+          onClick={() => embedUrl ? setIsVideoOpen(true) : null}
+          className="relative block z-10 mt-16 md:mt-24 w-full max-w-3xl mx-6 aspect-[16/9] md:aspect-[21/9] bg-[#111] border border-[#1f1f1f] rounded-xl overflow-hidden group cursor-pointer shadow-2xl"
+        >
           <Image src={videoThumb} alt="Video Cover" fill className="object-cover opacity-50 grayscale group-hover:opacity-75 group-hover:grayscale-0 transition-all duration-700" />
           <div className="absolute inset-0 flex items-center justify-center">
             <PlayCircle className="w-16 h-16 text-[#ececec]/70 group-hover:text-white transition-colors duration-300 stroke-1" />
@@ -209,7 +243,11 @@ export default function ArticleClient({ article, recommendedEpisode }: { article
           </div>
 
           <div className="flex justify-center pt-12">
-            <div className="relative w-full max-w-4xl aspect-[21/9] bg-[#111] border border-[#1f1f1f] rounded-xl overflow-hidden group cursor-pointer shadow-2xl">
+            {/* --- TOMBOL PLAY VIDEO BAWAH --- */}
+            <div 
+              onClick={() => embedUrl ? setIsVideoOpen(true) : null}
+              className="relative block w-full max-w-4xl aspect-[21/9] bg-[#111] border border-[#1f1f1f] rounded-xl overflow-hidden group cursor-pointer shadow-2xl"
+            >
               <Image src={videoThumb} alt="Secondary Video Cover" fill className="object-cover opacity-40 grayscale group-hover:opacity-70 group-hover:grayscale-0 transition-all duration-700" />
               <div className="absolute inset-0 flex items-center justify-center">
                 <PlayCircle className="w-16 h-16 text-[#ececec]/70 group-hover:text-white transition-colors duration-300 stroke-1" />

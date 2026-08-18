@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Clock, Package, Truck, CheckCircle2, XCircle, ExternalLink, MapPin } from "lucide-react";
+import { Search, Clock, Package, Truck, CheckCircle2, XCircle, ExternalLink, MapPin, ArrowLeft } from "lucide-react";
+import Link from "next/link"; // Tambahkan import Link
 
 export default function TrackOrderPage() {
   const [orderNumber, setOrderNumber] = useState("");
@@ -57,6 +58,8 @@ export default function TrackOrderPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#ececec] flex flex-col items-center justify-center p-6 border-t border-[#1f1f1f]">
+      
+      {/* Container Kotak Utama */}
       <div className="w-full max-w-xl bg-[#0a0a0a] border border-[#1f1f1f] p-8 md:p-10 rounded-2xl shadow-2xl">
         
         {/* Header Section */}
@@ -214,6 +217,17 @@ export default function TrackOrderPage() {
           </div>
         )}
       </div>
+
+      {/* --- TOMBOL KEMBALI (Ditambahkan di sini) --- */}
+      <div className="mt-8 flex items-center justify-center">
+        <Link 
+          href="/" 
+          className="text-[#ececec]/50 hover:text-white flex items-center gap-2 text-[10px] uppercase tracking-widest transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
+        </Link>
+      </div>
+
     </div>
   );
 }

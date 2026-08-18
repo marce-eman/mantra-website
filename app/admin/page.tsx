@@ -26,10 +26,12 @@ export default async function AdminDashboardPage() {
       {/* Statistik Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-12">
         
-        <div className="bg-[#0a0a0a] border border-[#1f1f1f] p-6 rounded-2xl flex flex-col justify-between">
-          <h3 className="text-[10px] text-[#ececec]/60 uppercase tracking-widest mb-4">Total Revenue</h3>
-          <p className="text-2xl font-mono text-emerald-400">Rp {totalRevenue.toLocaleString("id-ID")}</p>
-        </div>
+      <div className="bg-[#0a0a0a] border border-[#1f1f1f] p-6 rounded-2xl flex flex-col justify-between"> 
+        <h3 className="text-[10px] text-[#ececec]/60 uppercase tracking-widest mb-4">Total Revenue</h3> 
+        <p className="text-2xl font-mono text-emerald-400">
+          ${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </p> 
+      </div>
         
         <div className="bg-[#0a0a0a] border border-[#1f1f1f] p-6 rounded-2xl flex flex-col justify-between">
           <h3 className="text-[10px] text-[#ececec]/60 uppercase tracking-widest mb-4">Total Orders</h3>

@@ -6,6 +6,7 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // --- STATE BARU UNTUK CUSTOM NOTIFIKASI (TOAST) ---
@@ -60,6 +61,28 @@ export default function AdminOrdersPage() {
       showToast("Error updating order.", "error"); // <--- Menggantikan alert()
     } finally {
       setSavingId(null);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to permanently delete this canceled order?")) return;
+    
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/admin/orders?id=${id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        showToast("Order deleted permanently.", "success");
+        fetchOrders();
+      } else {
+        showToast("Failed to delete order.", "error");
+      }
+    } catch (err) {
+      showToast("Error deleting order.", "error");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -150,6 +173,7 @@ export default function AdminOrdersPage() {
                       >
                         {expandedId === ord.id ? "Close" : "Details"}
                       </button>
+                      
                       <button
                         onClick={() => handleUpdate(ord.id, ord)}
                         disabled={savingId === ord.id}
@@ -157,6 +181,17 @@ export default function AdminOrdersPage() {
                       >
                         {savingId === ord.id ? "Saving..." : "Save"}
                       </button>
+
+                      {/* TOMBOL DELETE: Hanya muncul jika status CANCELED */}
+                      {ord.status === "CANCELED" && (
+                        <button
+                          onClick={() => handleDelete(ord.id)}
+                          disabled={deletingId === ord.id}
+                          className="border border-red-500/30 text-red-400 bg-transparent font-bold text-[10px] uppercase tracking-widest px-3 py-1.5 rounded hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                        >
+                           {deletingId === ord.id ? "..." : "Delete"}
+                        </button>
+                      )}
                     </td>
                   </tr>
 

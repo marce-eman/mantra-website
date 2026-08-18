@@ -1,9 +1,9 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, XCircle } from "lucide-react";
 
 // --- KOMPONEN BANTUAN UNTUK KARTU GRID (EPISODE GENAP) ---
 const GridCard = ({ item, aspect }: { item: any; aspect: string }) => (
@@ -39,6 +39,7 @@ const GridCard = ({ item, aspect }: { item: any; aspect: string }) => (
 // --- KOMPONEN UTAMA SETIAP EPISODE ---
 function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
   const carouselRef = useRef<HTMLDivElement>(null);
+  const [isVideoOpen, setIsVideoOpen] = useState(false);
 
   const scrollCarousel = (direction: "left" | "right") => {
     if (carouselRef.current) {
@@ -46,6 +47,16 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
       carouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
     }
   };
+
+  // --- FUNGSI PINTAR: Convert Link YouTube Biasa Jadi Embed ---
+  const getEmbedUrl = (url: string) => {
+    if (!url || url === "#") return null;
+    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}?autoplay=1` : null;
+  };
+  
+  const embedUrl = getEmbedUrl(episode.videoUrl);
 
   const defaultItems = [
     { id: "1", slug: "1", image: "/images/Group 351.png", title: "Fluere Nabulam", articleNo: "001" },
@@ -67,54 +78,107 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
   const isEvenEpisode = index % 2 !== 0;
 
   // ==========================================
+  // KOMPONEN MODAL VIDEO (POP-UP)
+  // ==========================================
+  const VideoModal = () => (
+    isVideoOpen && embedUrl ? (
+      <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/95 backdrop-blur-sm p-4 md:p-12 animate-in fade-in duration-300">
+        <div className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] border border-[#1f1f1f]">
+          {/* Tombol Close ala Screenshot */}
+          <button
+            onClick={() => setIsVideoOpen(false)}
+            className="absolute top-4 right-4 z-10 flex items-center gap-2 bg-black/60 hover:bg-red-900/80 border border-[#1f1f1f] text-[#ececec] px-4 py-2 rounded-full text-[10px] uppercase tracking-widest transition-colors cursor-pointer backdrop-blur-md"
+          >
+            <XCircle className="w-4 h-4 text-red-400" /> Close Video
+          </button>
+          
+          <iframe
+            src={embedUrl}
+            className="w-full h-full"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+          ></iframe>
+        </div>
+      </div>
+    ) : null
+  );
+
+  // ==========================================
   // LAYOUT B: EPISODE GENAP (GRID STYLE)
   // ==========================================
   if (isEvenEpisode) {
-    const item1 = episodeItems[0] || defaultItems[0];
-    const item2 = episodeItems[1] || episodeItems[0] || defaultItems[1];
-    const item3 = episodeItems[2] || episodeItems[0] || defaultItems[2];
-    const item4 = episodeItems[3] || episodeItems[0] || defaultItems[3];
-
     return (
       <section className="relative z-20 bg-[#050505] pt-16 pb-24 border-b border-[#1f1f1f]">
+        
+        {/* Panggil Modal Videonya di Sini */}
+        <VideoModal />
+
         <div className="flex">
           <div className="hidden md:flex flex-col items-center justify-between w-16 shrink-0 border-r border-[#1f1f1f] py-12 px-4">
-            <div className="flex flex-col gap-6 items-center text-[#ececec]/60">
-              {/* Ikon sosial */}
-            </div>
+            <div className="flex flex-col gap-6 items-center text-[#ececec]/60"></div>
             <div className="-rotate-90 text-[#ececec]/30 text-[9px] uppercase tracking-[0.25em] whitespace-nowrap select-none mt-24">
               DISCOVER OUR STORIES
             </div>
           </div>
 
           <div className="flex-1 px-6 md:px-12">
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-end mb-12">
-              <div className="md:col-span-7 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <p className="text-[#ececec]/60 text-xs leading-relaxed whitespace-pre-line">
-                  {episode.descriptionLeft || ""}
-                </p>
-                <p className="text-[#ececec]/60 text-xs leading-relaxed whitespace-pre-line">
-                  {episode.descriptionRight || ""}
-                </p>
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center mb-16">
+              
+              {/* KIRI: VIDEO THUMBNAIL */}
+              <div className="md:col-span-5 flex justify-start">
+                <div 
+                  onClick={() => embedUrl ? setIsVideoOpen(true) : null}
+                  className="relative block w-full max-w-[340px] aspect-[16/10] bg-black/60 backdrop-blur-md border border-[#1f1f1f]/80 rounded-2xl overflow-hidden group shadow-2xl cursor-pointer"
+                >
+                  <Image 
+                    src={episode.heroImage || "/images/ARTICLES STORIES.png"} 
+                    alt="Episode Preview" 
+                    fill 
+                    className="object-cover opacity-75 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" 
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full border border-[#ececec]/50 flex items-center justify-center backdrop-blur-md bg-black/40 transition-transform group-hover:scale-110">
+                      <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-[#ececec] border-b-[8px] border-b-transparent ml-1" />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="md:col-span-5 text-right">
-                <span className="text-[#ececec]/40 text-[9px] uppercase tracking-[0.3em] block mb-1">
-                  EPISODE {episode.episodeNo || `0${index + 1}`}
+
+              {/* KANAN: JUDUL EPISODE & PARAGRAF */}
+              <div className="md:col-span-7 flex flex-col items-end text-right">
+                <span className="text-[#ececec]/50 text-[10px] uppercase tracking-widest block mb-3">
+                  Episode {episode.episodeNo || `0${index + 1}`}
                 </span>
-                <h2 className="text-2xl md:text-4xl font-light text-[#ececec] tracking-[0.2em] font-serif uppercase">
+                <h2 className="text-3xl md:text-5xl font-light text-[#ececec] tracking-[0.15em] mb-6 leading-none whitespace-pre-line uppercase">
                   {episode.title || "LEARN THE CHANTS"}
                 </h2>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full text-left mt-2">
+                  <p className="text-[#ececec]/60 text-xs leading-relaxed whitespace-pre-line">
+                    {episode.descriptionLeft || ""}
+                  </p>
+                  <p className="text-[#ececec]/60 text-xs leading-relaxed whitespace-pre-line">
+                    {episode.descriptionRight || ""}
+                  </p>
+                </div>
               </div>
+
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-              <div className="flex flex-col gap-6">
-                <GridCard item={item1} aspect="aspect-[4/3]" />
-                <GridCard item={item2} aspect="aspect-[4/3]" />
-              </div>
-              <GridCard item={item3} aspect="aspect-[3/4]" />
-              <GridCard item={item4} aspect="aspect-[3/4]" />
+              {(episodeItems[0] || episodeItems[1]) && (
+                <div className="flex flex-col gap-6">
+                  {episodeItems[0] && <GridCard item={episodeItems[0]} aspect="aspect-[4/3]" />}
+                  {episodeItems[1] && <GridCard item={episodeItems[1]} aspect="aspect-[4/3]" />}
+                </div>
+              )}
+              {episodeItems[2] && <GridCard item={episodeItems[2]} aspect="aspect-[3/4]" />}
+              {episodeItems[3] && <GridCard item={episodeItems[3]} aspect="aspect-[3/4]" />}
+              {episodeItems.slice(4).map((item: any) => (
+                <GridCard key={item.id} item={item} aspect="aspect-[3/4]" />
+              ))}
             </div>
+
           </div>
         </div>
       </section>
@@ -126,6 +190,10 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
   // ==========================================
   return (
     <section className="relative z-20 pt-24 pb-16 bg-[#050505] overflow-hidden border-b border-[#1f1f1f]">
+      
+      {/* Panggil Modal Videonya di Sini */}
+      <VideoModal />
+
       <div className="max-w-screen-2xl mx-auto px-6 md:px-12 mb-16">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
           <div className="md:col-span-7">
@@ -146,7 +214,10 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
           </div>
 
           <div className="md:col-span-5 flex justify-end">
-            <div className="relative w-full max-w-[340px] aspect-[16/10] bg-black/60 backdrop-blur-md border border-[#1f1f1f]/80 rounded-2xl overflow-hidden group shadow-2xl">
+            <div 
+              onClick={() => embedUrl ? setIsVideoOpen(true) : null}
+              className="relative block w-full max-w-[340px] aspect-[16/10] bg-black/60 backdrop-blur-md border border-[#1f1f1f]/80 rounded-2xl overflow-hidden group shadow-2xl cursor-pointer"
+            >
               <Image 
                 src={episode.heroImage || "/images/ARTICLES STORIES.png"} 
                 alt="Episode Preview" 
@@ -154,7 +225,7 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
                 className="object-cover opacity-75 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" 
               />
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-14 h-14 rounded-full border border-[#ececec]/50 flex items-center justify-center backdrop-blur-md bg-black/40">
+                <div className="w-14 h-14 rounded-full border border-[#ececec]/50 flex items-center justify-center backdrop-blur-md bg-black/40 transition-transform group-hover:scale-110">
                   <div className="w-0 h-0 border-t-[8px] border-t-transparent border-l-[14px] border-l-[#ececec] border-b-[8px] border-b-transparent ml-1" />
                 </div>
               </div>
@@ -213,14 +284,8 @@ export default function HomeClient({ episodes }: { episodes: any[] }) {
 
       {/* --- HERO SECTION --- */}
       <section className="relative h-screen w-full flex items-center justify-center bg-[#050505] overflow-hidden">
-
-        {/* ===================================================== */}
-        {/* MOBILE: MATA + MASK DALAM CONTAINER 1:1              */}
-        {/* ===================================================== */}
         <div className="absolute inset-0 z-0 flex items-center justify-center pointer-events-none md:hidden">
           <div className="relative w-[150vw] aspect-square flex items-center justify-center">
-
-            {/* GAMBAR MATA MOBILE */}
             <Image
               src="/images/pexels-wendelmoretti-1925630(background mata untuk jam).png"
               alt="Mantra Eye Background"
@@ -228,8 +293,6 @@ export default function HomeClient({ episodes }: { episodes: any[] }) {
               className="object-cover object-center grayscale opacity-100 brightness-100 scale-140 translate-y-13"
               priority
             />
-
-            {/* MASK MOBILE */}
             <Image
               src="/images/MASK.png"
               alt="Mantra Clock Hero"
@@ -237,16 +300,10 @@ export default function HomeClient({ episodes }: { episodes: any[] }) {
               className="object-contain mix-blend-screen opacity-45 contrast-125 scale-120 -translate-y-1"
               priority
             />
-
           </div>
         </div>
 
-
-        {/* ===================================================== */}
-        {/* DESKTOP: MATA FULL SCREEN                             */}
-        {/* ===================================================== */}
         <div className="hidden md:flex absolute inset-0 z-0 items-center justify-center pointer-events-none">
-
           <Image
             src="/images/pexels-wendelmoretti-1925630(background mata untuk jam).png"
             alt="Mantra Eye Background"
@@ -254,17 +311,10 @@ export default function HomeClient({ episodes }: { episodes: any[] }) {
             className="object-cover object-[center_17%] scale-100 grayscale opacity-100 brightness-100"
             priority
           />
-
         </div>
 
-
-        {/* ===================================================== */}
-        {/* DESKTOP: MASK DALAM CONTAINER SQUARE                 */}
-        {/* ===================================================== */}
         <div className="hidden md:flex absolute inset-0 z-10 items-center justify-center pointer-events-none">
-
           <div className="relative w-full h-full max-w-[400vh] aspect-square">
-
             <Image
               src="/images/MASK.png"
               alt="Mantra Clock Hero"
@@ -272,17 +322,10 @@ export default function HomeClient({ episodes }: { episodes: any[] }) {
               className="object-contain mix-blend-screen opacity-45 contrast-125 scale-120 translate-y-10"
               priority
             />
-
           </div>
-
         </div>
 
-
-        {/* ===================================================== */}
-        {/* CONTENT                                               */}
-        {/* ===================================================== */}
         <div className="relative z-20 text-center flex flex-col items-center max-w-[400px] px-4">
-
           <div className="mb-4 flex justify-center mt-6">
             <Image
               alt="Mantra Wordmark Hero"
@@ -307,9 +350,7 @@ export default function HomeClient({ episodes }: { episodes: any[] }) {
             Learn More
             <ArrowRight className="w-2.5 h-2.5" />
           </Link>
-
         </div>
-
       </section>
 
       <div id="collection" className="border-y border-[#1f1f1f] bg-[#0a0a0a] py-3 overflow-hidden">

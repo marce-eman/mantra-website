@@ -16,6 +16,7 @@ export async function saveEpisodeAction(data: any) {
           descriptionRight: data.descriptionRight,
           heroImage: data.heroImage,
           isActive: data.isActive,
+          videoUrl: data.videoUrl,
         },
       });
     } else {
@@ -28,6 +29,7 @@ export async function saveEpisodeAction(data: any) {
           descriptionRight: data.descriptionRight,
           heroImage: data.heroImage,
           isActive: data.isActive,
+          videoUrl: data.videoUrl,
         },
       });
     }

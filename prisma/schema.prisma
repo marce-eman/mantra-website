@@ -34,6 +34,9 @@ model User {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  password         String?
+  twoFactorEnabled Boolean?  @default(false)
+  twoFactorSecret  String?
   accounts      Account[]
   sessions      Session[]
   orders        Order[]
@@ -48,7 +51,8 @@ model Episode {
   title           String    // Contoh: "OPUS ARCANUM"
   descriptionLeft String?   @db.Text 
   descriptionRight String?  @db.Text 
-  heroImage       String?   
+  heroImage       String?
+  videoUrl        String?   
   isActive        Boolean   @default(true) 
 
   createdAt       DateTime  @default(now())
@@ -88,6 +92,7 @@ model Product {
   editorialImageRight String?  
   
   videoThumb          String?  
+  videoUrl            String?
 
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
@@ -194,4 +199,12 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  email     String?  // atau phone, sesuaikan dengan aslinya
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }

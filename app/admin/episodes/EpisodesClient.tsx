@@ -10,7 +10,7 @@ export default function EpisodesClient({ initialEpisodes }: { initialEpisodes: a
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   
-  // State form
+  // State form ditambahkan videoUrl
   const [formData, setFormData] = useState({
     id: "",
     episodeNo: "",
@@ -18,12 +18,16 @@ export default function EpisodesClient({ initialEpisodes }: { initialEpisodes: a
     descriptionLeft: "",
     descriptionRight: "",
     heroImage: "",
+    videoUrl: "", // <--- STATE BARU UNTUK LINK VIDEO
     isActive: true,
   });
 
   const handleOpenModal = (episode?: any) => {
     if (episode) {
-      setFormData(episode);
+      setFormData({
+        ...episode,
+        videoUrl: episode.videoUrl || "", // Pastikan terisi jika ada data
+      });
     } else {
       setFormData({
         id: "",
@@ -32,6 +36,7 @@ export default function EpisodesClient({ initialEpisodes }: { initialEpisodes: a
         descriptionLeft: "",
         descriptionRight: "",
         heroImage: "",
+        videoUrl: "", // Reset untuk form baru
         isActive: true,
       });
     }
@@ -161,13 +166,25 @@ export default function EpisodesClient({ initialEpisodes }: { initialEpisodes: a
                 </div>
               </div>
 
-              {/* UBAHAN ADA DI SINI: ImageUpload Component */}
-              <div>
-                <label className="block text-[#ececec]/60 uppercase tracking-widest mb-1.5">Background Image (Home)</label>
-                <ImageUpload
-                  value={formData.heroImage}
-                  onChange={(url) => setFormData({ ...formData, heroImage: url })}
-                />
+              {/* INPUT GAMBAR & VIDEO BERSEBELAHAN */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[#ececec]/60 uppercase tracking-widest mb-1.5">Background Image (Home)</label>
+                  <ImageUpload
+                    value={formData.heroImage}
+                    onChange={(url) => setFormData({ ...formData, heroImage: url })}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#ececec]/60 uppercase tracking-widest mb-1.5">Link Video (Youtube/Vimeo)</label>
+                  <input
+                    type="url"
+                    value={formData.videoUrl || ""}
+                    onChange={(e) => setFormData({ ...formData, videoUrl: e.target.value })}
+                    className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-[#ececec] rounded-xl focus:outline-none focus:border-white transition-colors"
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
