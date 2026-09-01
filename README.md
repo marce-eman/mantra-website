@@ -52,5 +52,5 @@ Aplikasi dapat diakses melalui web browser di `http://localhost:3000`.
 
 ## 🔑 Akun Testing (Opsional)
 Gunakan kredensial berikut untuk menguji dashboard admin:
-* **Email:** admin@testing.com
+* **Email:** gugleid3767@gmail.com
 * **Password:** admin123
