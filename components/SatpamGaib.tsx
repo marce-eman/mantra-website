@@ -17,10 +17,7 @@ export default function SatpamGaib({ isFriday, isAdmin, hasOrders, children }: S
   const pathname = usePathname();
   const router = useRouter();
 
-  // --- PERUBAHAN DI SINI ---
-  // Gabungkan semua rute autentikasi ke dalam satu variabel
   const isAuthPath = pathname.startsWith("/login") || pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password");
-  
   const isApiPath = pathname.startsWith("/api");
   const isTrackPath = pathname.startsWith("/track");
   const isOrdersPath = pathname.startsWith("/account/orders");
@@ -28,10 +25,12 @@ export default function SatpamGaib({ isFriday, isAdmin, hasOrders, children }: S
 
   // 1. SEMUA HOOKS DI ATAS SEBELUM KONDISI APAPUN
   useEffect(() => {
-    if (hasOrders && isAccountBase) {
+    // Tambahkan pengecekan !isAdmin && !isFriday di sini!
+    // Supaya satpam tidak nendang admin atau saat hari Jumat.
+    if (hasOrders && isAccountBase && !isAdmin && !isFriday) {
       router.replace("/account/orders");
     }
-  }, [hasOrders, isAccountBase, router]);
+  }, [hasOrders, isAccountBase, isAdmin, isFriday, router]);
 
   // 2. JIKA ADMIN ATAU HARI JUMAT: Buka semua pintu, render website normal! 🫡
   if (isAdmin || isFriday) {
@@ -39,7 +38,6 @@ export default function SatpamGaib({ isFriday, isAdmin, hasOrders, children }: S
   }
 
   // 3. JALUR PUBLIK (Auth, Track, API)
-  // --- PERUBAHAN DI SINI ---
   if (isAuthPath || isApiPath || isTrackPath) {
     return <>{children}</>;
   }
@@ -71,6 +69,5 @@ export default function SatpamGaib({ isFriday, isAdmin, hasOrders, children }: S
   }
 
   // 6. JIKA TOKO TUTUP & TAMU / USER TANPA PESANAN NYASAR KE HALAMAN LAIN:
-  // KONTEN WEBSITE (Navbar, Cart, Chat, Footer, dll) DI-BLOCK TOTAL DAN TIDAK DIRENDER SAMA SEKALI!
   return <NotFound />;
 }

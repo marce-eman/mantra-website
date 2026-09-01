@@ -5,12 +5,11 @@ import { User, Package, MapPin, ArrowLeft, Shield } from "lucide-react";
 import SignOutButton from "./SignOutButton";
 import { prisma } from "@/lib/prisma";
 
-export default async function AccountLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function AccountLayout({ children }: { children: React.ReactNode; }) {
   const session = await auth();
+
+  // 👇 TAMBAHKAN BARIS INI UNTUK DEBUGGING
+  console.log("=== DEBUG SESSION LAYOUT ===", JSON.stringify(session, null, 2));
 
   if (!session?.user?.id) {
     redirect("/login?redirect=/account/orders");
@@ -26,6 +25,8 @@ export default async function AccountLayout({
     }
   });
 
+  console.log("=== DEBUG DB USER LAYOUT ===", dbUser);
+  
   const isAdmin = dbUser?.role === "ADMIN";
   const hasOrders = (dbUser?._count?.orders ?? 0) > 0;
 
