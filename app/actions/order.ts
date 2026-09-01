@@ -91,9 +91,10 @@ export async function createOrderAction({
     return { success: true, orderId: order.id };
   } catch (error: any) {
     console.error("=== PRISMA CREATE ORDER ERROR ===", error);
+    // FIX BUG-NEW: Gunakan pesan error yang generik dan aman
     return {
       success: false,
-      error: `Gagal membuat pesanan: ${error?.message || "Database error"}`,
+      error: "Gagal membuat pesanan. Silakan coba lagi.",
     };
   }
 }

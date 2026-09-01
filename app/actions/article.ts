@@ -2,12 +2,25 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 
 export async function saveArticleAction(formData: any) {
   try {
+    // --- CEK OTORISASI ADMIN ---
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const user = await prisma.user.findUnique({ 
+      where: { id: session.user.id }, 
+      select: { role: true } 
+    });
+    if (user?.role !== "ADMIN") {
+      return { success: false, error: "Forbidden. Admin access required." };
+    }
+
     const { id, images, galleryImages, sizes, price, stock, episodeId, ...rest } = formData;
 
-    // Helper untuk mengubah string koma ("a, b, c") menjadi Array String (["a", "b", "c"])
     const parseToArray = (input: any) => {
       if (Array.isArray(input)) return input;
       if (typeof input === "string" && input.trim() !== "") {
@@ -41,7 +54,6 @@ export async function saveArticleAction(formData: any) {
       });
     }
 
-    // MEMAKSA NEXT.JS MEMBERSIHKAN CACHE DI SEMUA RUTE Halaman
     revalidatePath("/", "layout");
     revalidatePath("/shop");
     revalidatePath("/articles/[slug]", "page");
@@ -50,12 +62,25 @@ export async function saveArticleAction(formData: any) {
     return { success: true };
   } catch (error: any) {
     console.error("Save article error:", error);
-    return { success: false, error: error.message || "Gagal menyimpan artikel" };
+    return { success: false, error: "Gagal menyimpan artikel. Silakan coba lagi." };
   }
 }
 
 export async function deleteArticleAction(id: string) {
   try {
+    // --- CEK OTORISASI ADMIN ---
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const user = await prisma.user.findUnique({ 
+      where: { id: session.user.id }, 
+      select: { role: true } 
+    });
+    if (user?.role !== "ADMIN") {
+      return { success: false, error: "Forbidden. Admin access required." };
+    }
+
     await prisma.product.delete({
       where: { id },
     });
@@ -68,6 +93,6 @@ export async function deleteArticleAction(id: string) {
     return { success: true };
   } catch (error: any) {
     console.error("Delete article error:", error);
-    return { success: false, error: error.message || "Gagal menghapus artikel" };
+    return { success: false, error: "Gagal menghapus artikel." };
   }
 }

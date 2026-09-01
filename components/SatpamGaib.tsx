@@ -17,7 +17,10 @@ export default function SatpamGaib({ isFriday, isAdmin, hasOrders, children }: S
   const pathname = usePathname();
   const router = useRouter();
 
-  const isLoginPath = pathname.startsWith("/login");
+  // --- PERUBAHAN DI SINI ---
+  // Gabungkan semua rute autentikasi ke dalam satu variabel
+  const isAuthPath = pathname.startsWith("/login") || pathname.startsWith("/forgot-password") || pathname.startsWith("/reset-password");
+  
   const isApiPath = pathname.startsWith("/api");
   const isTrackPath = pathname.startsWith("/track");
   const isOrdersPath = pathname.startsWith("/account/orders");
@@ -35,8 +38,9 @@ export default function SatpamGaib({ isFriday, isAdmin, hasOrders, children }: S
     return <>{children}</>;
   }
 
-  // 3. JALUR PUBLIK (Login, Track, API)
-  if (isLoginPath || isApiPath || isTrackPath) {
+  // 3. JALUR PUBLIK (Auth, Track, API)
+  // --- PERUBAHAN DI SINI ---
+  if (isAuthPath || isApiPath || isTrackPath) {
     return <>{children}</>;
   }
 

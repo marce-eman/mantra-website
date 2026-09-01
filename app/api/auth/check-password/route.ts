@@ -31,8 +31,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid password." }, { status: 401 });
     }
 
+    // --- KITA BALIKIN LAGI BARIS INI BIAR NEXTAUTH GAK BINGUNG ---
     return NextResponse.json({ status: "SUCCESS", userId: user.id, userName: user.name });
+    
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("[CHECK PASSWORD ERROR]:", error);
+    return NextResponse.json({ error: "Authentication failed. Please try again." }, { status: 500 });
   }
 }

@@ -2,11 +2,24 @@
 
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 
 export async function saveEpisodeAction(data: any) {
   try {
+    // --- CEK OTORISASI ADMIN ---
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const user = await prisma.user.findUnique({ 
+      where: { id: session.user.id }, 
+      select: { role: true } 
+    });
+    if (user?.role !== "ADMIN") {
+      return { success: false, error: "Forbidden. Admin access required." };
+    }
+
     if (data.id) {
-      // Jika ada ID, berarti mode EDIT
       await prisma.episode.update({
         where: { id: data.id },
         data: {
@@ -20,7 +33,6 @@ export async function saveEpisodeAction(data: any) {
         },
       });
     } else {
-      // Jika tidak ada ID, berarti BUAT BARU
       await prisma.episode.create({
         data: {
           episodeNo: data.episodeNo,
@@ -34,7 +46,6 @@ export async function saveEpisodeAction(data: any) {
       });
     }
 
-    // Refresh halaman otomatis biar datanya langsung update!
     revalidatePath("/admin/episodes");
     revalidatePath("/"); 
     return { success: true };
@@ -46,9 +57,23 @@ export async function saveEpisodeAction(data: any) {
 
 export async function deleteEpisodeAction(id: string) {
   try {
+    // --- CEK OTORISASI ADMIN ---
+    const session = await auth();
+    if (!session?.user?.id) {
+      return { success: false, error: "Unauthorized. Please log in." };
+    }
+    const user = await prisma.user.findUnique({ 
+      where: { id: session.user.id }, 
+      select: { role: true } 
+    });
+    if (user?.role !== "ADMIN") {
+      return { success: false, error: "Forbidden. Admin access required." };
+    }
+
     await prisma.episode.delete({
       where: { id },
     });
+    
     revalidatePath("/admin/episodes");
     revalidatePath("/");
     return { success: true };

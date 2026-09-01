@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, MapPin, Trash2, Check } from "lucide-react";
-import { saveUserAddressAction } from "@/app/actions/address";
+import { saveUserAddressAction, getUserAddressAction } from "@/app/actions/address";
 
 interface Address {
   id: string;
@@ -30,7 +30,56 @@ export default function AccountAddressesPage() {
     postalCode: "",
   });
 
-  const handleSetDefault = (id: string) => {
+  // --- MENGAMBIL DATA DARI DATABASE SAAT HALAMAN DIBUKA ---
+  useEffect(() => {
+    async function loadAddress() {
+      const dbAddress = await getUserAddressAction();
+      
+      // Jika ada alamat di DB (bukan kosong atau "-")
+      if (dbAddress && dbAddress !== "-") {
+        // Karena di DB disimpen sebagai 1 teks panjang, kita pecah lagi buat ditampilin
+        let label = "SAVED";
+        let name = "Customer";
+        let phone = "-";
+        let street = dbAddress;
+
+        // Coba ngekstrak format: [LABEL] Nama (Phone) - Jalan
+        const match = dbAddress.match(/\[(.*?)\] (.*?) \((.*?)\) - (.*)/);
+        if (match) {
+          label = match[1];
+          name = match[2];
+          phone = match[3];
+          street = match[4];
+        }
+
+        setAddresses([{
+          id: "db-address",
+          label,
+          recipientName: name,
+          phone,
+          street,
+          city: "",
+          postalCode: "",
+          isDefault: true, // Otomatis jadi default karena ini dari DB
+        }]);
+      }
+    }
+    loadAddress();
+  }, []);
+
+  // --- PERBAIKAN: SET DEFAULT SEKARANG NYIMPEN KE DATABASE ---
+  const handleSetDefault = async (id: string) => {
+    const selectedAddress = addresses.find((addr) => addr.id === id);
+    
+    if (selectedAddress) {
+      // 1. Rangkai teks alamatnya
+      const fullAddressString = `[${selectedAddress.label.toUpperCase()}] ${selectedAddress.recipientName} (${selectedAddress.phone}) - ${selectedAddress.street}, ${selectedAddress.city}, ${selectedAddress.postalCode}`;
+      
+      // 2. Tembak ke Supabase
+      await saveUserAddressAction(fullAddressString);
+    }
+
+    // 3. Update tampilan layar
     setAddresses((prev) =>
       prev.map((addr) => ({
         ...addr,
@@ -41,9 +90,8 @@ export default function AccountAddressesPage() {
 
   const handleDelete = async (id: string) => {
     setAddresses((prev) => prev.filter((addr) => addr.id !== id));
-    // Jika semua alamat dihapus, kosongkan kolom address di database
     if (addresses.length <= 1) {
-      await saveUserAddressAction("");
+      await saveUserAddressAction("-"); // Kosongkan DB jika semua dihapus
     }
   };
 
@@ -52,33 +100,22 @@ export default function AccountAddressesPage() {
     setLoading(true);
     setErrorMsg("");
 
-    // Gabungkan data form menjadi satu string alamat lengkap
     const fullAddressString = `[${formData.label.toUpperCase()}] ${formData.recipientName} (${formData.phone}) - ${formData.street}, ${formData.city}, ${formData.postalCode}`;
-
-    // 1. Simpan ke Supabase
     const result = await saveUserAddressAction(fullAddressString);
 
     if (result.success) {
       const newAddress: Address = {
         id: Date.now().toString(),
         ...formData,
-        isDefault: addresses.length === 0,
+        isDefault: addresses.length === 0, 
       };
 
       setAddresses([...addresses, newAddress]);
       setIsModalOpen(false);
-      setFormData({
-        label: "",
-        recipientName: "",
-        phone: "",
-        street: "",
-        city: "",
-        postalCode: "",
-      });
+      setFormData({ label: "", recipientName: "", phone: "", street: "", city: "", postalCode: "" });
     } else {
       setErrorMsg(result.error || "Gagal menyimpan alamat.");
     }
-
     setLoading(false);
   };
 
@@ -214,7 +251,7 @@ export default function AccountAddressesPage() {
                   <input
                     type="text"
                     required
-                    placeholder="John Doe"
+                    placeholder="Your Name"
                     value={formData.recipientName}
                     onChange={(e) =>
                       setFormData({

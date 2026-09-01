@@ -27,9 +27,10 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push("/account");
+      // Ganti router.push jadi window.location.href biar gak ada bentrok cache!
+      window.location.href = "/account";
     }
-  }, [status, router]);
+  }, [status]); // Hapus 'router' dari array karena udah nggak dipakai
 
   const checkBiometricSupport = async (): Promise<boolean> => {
     if (typeof window === "undefined" || !window.PublicKeyCredential) return false;
@@ -174,7 +175,10 @@ export default function LoginPage() {
         const result = await signIn("credentials", { email, password, redirect: false });
         if (result?.error) throw new Error(`Session Error: ${result.error}`);
 
-        router.push("/account");
+        // --- MANTRA PENGUSIR HANTU CACHE ---
+        // Pakai window.location.href memaksa browser membuang cache lama
+        // dan mengunduh status role admin terbarumu langsung dari server!
+        window.location.href = "/account";
       }
     } catch (err: any) {
       setPopupMessage(err.message);
@@ -279,15 +283,27 @@ export default function LoginPage() {
         </div>
       )}
 
-      {/* --- POP-UP BIOMETRIK --- */}
-      {authStatus === "verifying" && (
+      {/* --- POP-UP BIOMETRIK & REDIRECTING --- */}
+      {(authStatus === "verifying" || authStatus === "success") && (
         <div className="fixed inset-0 z-[99999] flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in duration-300">
           <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl flex flex-col items-center">
-            <Fingerprint className="w-12 h-12 text-emerald-400 animate-pulse mb-6" />
-            <h3 className="text-[#ececec] text-sm uppercase tracking-widest font-serif mb-2">Awaiting Biometrics</h3>
-            <p className="text-[10px] text-[#ececec]/50 font-mono uppercase tracking-widest text-center">
-              Authenticate using your device sensor or PIN.
-            </p>
+            {authStatus === "verifying" ? (
+              <>
+                <Fingerprint className="w-12 h-12 text-emerald-400 animate-pulse mb-6" />
+                <h3 className="text-[#ececec] text-sm uppercase tracking-widest font-serif mb-2">Awaiting Biometrics</h3>
+                <p className="text-[10px] text-[#ececec]/50 font-mono uppercase tracking-widest text-center">
+                  Authenticate using your device sensor or PIN.
+                </p>
+              </>
+            ) : (
+              <>
+                <Loader2 className="w-12 h-12 text-emerald-400 animate-spin mb-6" />
+                <h3 className="text-[#ececec] text-sm uppercase tracking-widest font-serif mb-2">Authentication Success</h3>
+                <p className="text-[10px] text-[#ececec]/50 font-mono uppercase tracking-widest text-center">
+                  Preparing your dashboard...
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}

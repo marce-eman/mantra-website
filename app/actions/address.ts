@@ -12,7 +12,6 @@ export async function saveUserAddressAction(fullAddressString: string) {
   }
 
   try {
-    // Update kolom address pada tabel User di Supabase
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
@@ -25,5 +24,21 @@ export async function saveUserAddressAction(fullAddressString: string) {
   } catch (error) {
     console.error("Failed to update address:", error);
     return { success: false, error: "Gagal menyimpan alamat ke database." };
+  }
+}
+
+// --- FUNGSI BARU: Untuk mengambil alamat dari DB saat halaman dimuat ---
+export async function getUserAddressAction() {
+  const session = await auth();
+  if (!session?.user?.id) return null;
+
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { address: true },
+    });
+    return user?.address || null;
+  } catch (error) {
+    return null;
   }
 }

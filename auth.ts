@@ -55,16 +55,34 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   callbacks: {
     async jwt({ token, user }) {
+      // 1. Tangkap data saat pertama kali login
       if (user) {
         token.id = user.id;
-        const dbUser = await prisma.user.findUnique({ where: { id: user.id! } });
-        token.role = dbUser?.role || "CUSTOMER";
       }
+      
+      // 2. MENCEGAH BUG NEXTAUTH: Diam-diam NextAuth menyimpan ID di 'token.sub'. 
+      // Kita jadikan fallback kalau 'token.id' tiba-tiba kosong.
+      const currentId = token.id || token.sub;
+      
+      // 3. TARIK DATA TERBARU DARI DATABASE (Trik Sakti)
+      // Menjamin hak akses (Role) selalu up-to-date tanpa perlu re-login!
+      if (currentId) {
+        token.id = currentId;
+        const dbUser = await prisma.user.findUnique({ 
+          where: { id: currentId as string },
+          select: { role: true }
+        });
+        if (dbUser) {
+          token.role = dbUser.role;
+        }
+      }
+      
       return token;
     },
     async session({ session, token }) {
       if (session.user && token) {
-        session.user.id = token.id as string;
+        // Petakan kembali id dan role dari token ke session dengan aman
+        session.user.id = (token.id as string) || (token.sub as string);
         session.user.role = token.role as string;
       }
       return session;
