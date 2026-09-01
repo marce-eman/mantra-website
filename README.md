@@ -54,3 +54,9 @@ Aplikasi dapat diakses melalui web browser di `http://localhost:3000`.
 Gunakan kredensial berikut untuk menguji dashboard admin:
 * **Email:** gugleid3767@gmail.com
 * **Password:** admin123
+
+**Panduan Penggunaan Website (User Guide)**
+
+Untuk panduan lengkap mengenai cara menggunakan fitur-fitur website (seperti proses *checkout*, manajemen *dashboard* admin, dan operasional lainnya), silakan baca dokumen berikut:
+
+📖 [Dokumentasi Panduan Penggunaan Website](https://docs.google.com/document/d/1k2kXdZrjV3ftRImukmgAGxKZ_iWaGPlIGv2sMHObrb8/edit?usp=sharing)
