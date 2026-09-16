@@ -197,7 +197,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
             setIsSubmitting(false);
           },
           onClose: () => {
-            setErrorMsg("Pembayaran belum diselesaikan. Silakan selesaikan pembayaran Anda.");
+            setErrorMsg("Pembayaran belum diselesaikan. Anda dapat mencoba bayar lagi atau melihat pesanan di menu My Orders.");
             setIsSubmitting(false);
           },
         });

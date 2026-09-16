@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft, CreditCard, ShoppingBag, Truck } from "lucide-react";
 import { getSiteSetting } from "@/lib/siteSettings";
 import { formatRupiah } from "@/lib/utils";
+import PayNowButton from "@/components/PayNowButton";
 
 export default async function OrderDetailPage({
   params,
@@ -38,6 +39,8 @@ export default async function OrderDetailPage({
   if (!order) {
     redirect("/account/orders");
   }
+
+  const isPending = order.status === "PENDING" || order.paymentStatus === "PENDING";
 
   const formattedDate = new Date(order.createdAt).toLocaleDateString("en-US", {
     day: "numeric",
@@ -75,19 +78,29 @@ export default async function OrderDetailPage({
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs uppercase tracking-widest text-[#ececec]/50">Status:</span>
-          <span
-            className={`text-xs uppercase tracking-widest font-bold font-mono px-3 py-1 rounded-full border ${
-              order.status === "PAID" || order.status === "COMPLETED" || order.status === "SHIPPED"
-                ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/50"
-                : order.status === "CANCELED"
-                ? "bg-red-950/50 text-red-400 border-red-800/50"
-                : "bg-amber-950/50 text-amber-400 border-amber-800/50"
-            }`}
-          >
-            {order.status}
-          </span>
+        <div className="flex flex-wrap items-center gap-3">
+          {isPending && (
+            <PayNowButton
+              orderId={order.id}
+              snapToken={order.snapToken}
+              label="Bayar Sekarang"
+            />
+          )}
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs uppercase tracking-widest text-[#ececec]/50">Status:</span>
+            <span
+              className={`text-xs uppercase tracking-widest font-bold font-mono px-3 py-1 rounded-full border ${
+                order.status === "PAID" || order.status === "COMPLETED" || order.status === "SHIPPED"
+                  ? "bg-emerald-950/50 text-emerald-400 border-emerald-800/50"
+                  : order.status === "CANCELED"
+                  ? "bg-red-950/50 text-red-400 border-red-800/50"
+                  : "bg-amber-950/50 text-amber-400 border-amber-800/50"
+              }`}
+            >
+              {order.status}
+            </span>
+          </div>
         </div>
       </div>
 

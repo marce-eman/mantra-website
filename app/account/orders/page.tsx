@@ -5,6 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ExternalLink, Clock, Package, Truck, CheckCircle2, XCircle } from "lucide-react";
 import CopyOrderButton from "@/components/CopyOrderButton";
+import PayNowButton from "@/components/PayNowButton";
 import { formatRupiah } from "@/lib/utils";
 
 export default async function AccountOrdersPage() {
@@ -97,6 +98,7 @@ export default async function AccountOrdersPage() {
         <div className="space-y-6">
           {orders.map((order) => {
             const finalOrderId = order.orderNumber || order.id.toUpperCase();
+            const isPending = order.status === "PENDING" || order.paymentStatus === "PENDING";
 
             return (
               <div
@@ -167,7 +169,7 @@ export default async function AccountOrdersPage() {
                   })}
                 </div>
 
-                <div className="border-t border-[#1f1f1f] pt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 text-xs tracking-widest uppercase">
+                <div className="border-t border-[#1f1f1f] pt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-4 text-xs tracking-widest uppercase">
                   <div className="flex items-center gap-2">
                     <span className="text-[#ececec]/50">Total Amount:</span>
                     <span className="text-emerald-400 font-mono font-bold text-sm">
@@ -175,12 +177,22 @@ export default async function AccountOrdersPage() {
                     </span>
                   </div>
 
-                  <Link
-                    href={`/account/orders/${order.id}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-mono text-[#ececec]/70 hover:text-white transition-colors underline underline-offset-4"
-                  >
-                    View Order Details <ExternalLink className="w-3.5 h-3.5" />
-                  </Link>
+                  <div className="flex flex-wrap items-center gap-3">
+                    {isPending && (
+                      <PayNowButton
+                        orderId={order.id}
+                        snapToken={order.snapToken}
+                        label="Bayar Sekarang"
+                      />
+                    )}
+
+                    <Link
+                      href={`/account/orders/${order.id}`}
+                      className="inline-flex items-center gap-1.5 text-xs font-mono text-[#ececec]/70 hover:text-white transition-colors underline underline-offset-4"
+                    >
+                      View Order Details <ExternalLink className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
                 </div>
               </div>
             );
