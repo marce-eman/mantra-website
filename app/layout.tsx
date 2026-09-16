@@ -12,8 +12,6 @@ import { StoreNavbarWrapper, StoreBottomWrapper } from "@/components/StoreUIWrap
 import { getCachedUserProfile } from "@/lib/userProfile";
 import "./globals.css";
 
-export const preferredRegion = "sin1";
-
 export const metadata: Metadata = {
   title: "MANTRA — A Manifestation Born From The Shadows",
   description: "Crafted for those who walk through the void and seek truth within the dark.",
