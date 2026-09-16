@@ -90,8 +90,9 @@ export async function POST(req: Request) {
     let targetPaymentStatus = order.paymentStatus;
     let targetOrderStatus = order.status;
 
+    // 1. Handle Expanded Transaction Status
     if (transaction_status === "capture") {
-      if (fraud_status === "accept") {
+      if (fraud_status === "accept" || !fraud_status) {
         targetPaymentStatus = "PAID";
         targetOrderStatus = "PAID";
       } else if (fraud_status === "challenge") {
@@ -104,27 +105,30 @@ export async function POST(req: Request) {
     } else if (transaction_status === "pending") {
       targetPaymentStatus = "PENDING";
       targetOrderStatus = "PENDING";
-    } else if (
-      transaction_status === "deny" ||
-      transaction_status === "cancel" ||
-      transaction_status === "expire"
-    ) {
-      targetPaymentStatus = transaction_status === "expire" ? "EXPIRED" : "CANCELLED";
+    } else if (transaction_status === "expire") {
+      targetPaymentStatus = "EXPIRED";
       targetOrderStatus = "CANCELED";
-    } else if (transaction_status === "refund") {
+    } else if (transaction_status === "cancel" || transaction_status === "deny") {
+      targetPaymentStatus = "CANCELLED";
+      targetOrderStatus = "CANCELED";
+    } else if (transaction_status === "refund" || transaction_status === "partial_refund") {
       targetPaymentStatus = "REFUNDED";
       targetOrderStatus = "CANCELED";
     }
 
-    // Update database in transaction
+    // 2. Stock / Inventory Restoration on Expired or Cancelled status
     await prisma.$transaction(async (tx) => {
-      // If order is canceled and previously wasn't canceled, restore product stock
-      if (targetOrderStatus === "CANCELED" && order.status !== "CANCELED") {
+      const isNowCanceled = targetOrderStatus === "CANCELED" || targetPaymentStatus === "EXPIRED" || targetPaymentStatus === "CANCELLED";
+      const wasNotCanceled = order.status !== "CANCELED" && order.paymentStatus !== "EXPIRED" && order.paymentStatus !== "CANCELLED";
+
+      if (isNowCanceled && wasNotCanceled) {
         for (const item of order.items) {
-          await tx.product.update({
-            where: { id: item.productId },
-            data: { stock: { increment: item.quantity } },
-          });
+          if (item.productId) {
+            await tx.product.update({
+              where: { id: item.productId },
+              data: { stock: { increment: item.quantity } },
+            });
+          }
         }
       }
 
@@ -136,6 +140,8 @@ export async function POST(req: Request) {
         },
       });
     });
+
+    console.log(`[MIDTRANS WEBHOOK SUCCESS]: Order ${order.id} (${order.orderNumber}) updated -> paymentStatus=${targetPaymentStatus}, status=${targetOrderStatus}`);
 
     return NextResponse.json({
       status: "OK",
