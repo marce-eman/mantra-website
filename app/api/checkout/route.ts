@@ -131,7 +131,7 @@ export async function POST(req: Request) {
       data: { orderNumber: midtransOrderId },
     });
 
-    const authHeader = `Basic ${Buffer.from(`${serverKey}:`).toString("base64")}`;
+    const authHeader = `Basic ${Buffer.from(serverKey + ":").toString("base64")}`;
 
     // Item details for Midtrans (must sum to gross_amount)
     const midtransItemDetails = items.map((item: OrderItemInput, idx: number) => ({
