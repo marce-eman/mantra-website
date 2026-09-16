@@ -10,17 +10,7 @@ import { Truck, ShieldCheck, CreditCard, ChevronRight, Loader2, CheckCircle2 } f
 
 declare global {
   interface Window {
-    snap?: {
-      pay: (
-        token: string,
-        options?: {
-          onSuccess?: (result: any) => void;
-          onPending?: (result: any) => void;
-          onError?: (result: any) => void;
-          onClose?: () => void;
-        }
-      ) => void;
-    };
+    snap: any;
   }
 }
 
@@ -177,36 +167,46 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
       }
 
       const orderId = data.orderId;
-      const snapToken = data.snapToken;
+      const snapToken = data.snapToken || data.token;
 
-      // Check if Midtrans Snap SDK is loaded on window
-      if (snapToken && typeof window !== "undefined" && window.snap) {
+      if (!snapToken) {
+        if (data.redirectUrl) {
+          clearCart();
+          window.location.href = data.redirectUrl;
+          return;
+        }
+        throw new Error("Unable to retrieve Midtrans payment token.");
+      }
+
+      // Check if Midtrans Snap SDK is available on window
+      if (typeof window !== "undefined" && window.snap && typeof window.snap.pay === "function") {
         window.snap.pay(snapToken, {
-          onSuccess: () => {
+          onSuccess: (result: any) => {
+            console.log("Midtrans payment success:", result);
             clearCart();
             router.push(`/order-success?orderId=${orderId}`);
           },
-          onPending: () => {
+          onPending: (result: any) => {
+            console.log("Midtrans payment pending:", result);
             clearCart();
             router.push(`/order-success?orderId=${orderId}`);
           },
-          onError: () => {
-            setErrorMsg("Payment failed or was declined. Please try again.");
+          onError: (result: any) => {
+            console.error("Midtrans payment error:", result);
+            setErrorMsg("Payment failed or was declined. Please try again or select another payment method.");
             setIsSubmitting(false);
           },
           onClose: () => {
-            clearCart();
-            // Redirect to order success where pending status is shown
-            router.push(`/order-success?orderId=${orderId}`);
+            setErrorMsg("Payment popup was closed without completing the transaction. You can try paying again whenever ready.");
+            setIsSubmitting(false);
           },
         });
       } else if (data.redirectUrl) {
         clearCart();
         window.location.href = data.redirectUrl;
       } else {
-        // Fallback redirection
-        clearCart();
-        router.push(`/order-success?orderId=${orderId}`);
+        setErrorMsg("Midtrans Snap payment service is currently unavailable. Please refresh and try again.");
+        setIsSubmitting(false);
       }
     } catch (err: any) {
       console.error("Payment error:", err);
@@ -236,8 +236,8 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
       {/* Midtrans Snap Script (Sandbox) */}
       <Script
         src="https://app.sandbox.midtrans.com/snap/snap.js"
-        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY || ""}
-        strategy="lazyOnload"
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        strategy="afterInteractive"
       />
 
       <div className="bg-[#050505] min-h-screen border-t border-[#1f1f1f] py-12 text-[#ececec]">
