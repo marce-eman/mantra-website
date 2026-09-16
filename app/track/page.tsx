@@ -66,10 +66,10 @@ export default function TrackOrderPage() {
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#ececec] flex flex-col items-center justify-center p-6 border-t border-[#1f1f1f]">
-      
+
       {/* Container Kotak Utama */}
       <div className="w-full max-w-xl bg-[#0a0a0a] border border-[#1f1f1f] p-8 md:p-10 rounded-2xl shadow-2xl">
-        
+
         {/* Header Section */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 bg-[#111111] rounded-full flex items-center justify-center mb-4 border border-[#1f1f1f]">
@@ -113,7 +113,7 @@ export default function TrackOrderPage() {
         {/* TRACKING RESULT SECTION */}
         {result && (
           <div className="mt-8 border-t border-[#1f1f1f] pt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            
+
             {/* SPECIAL CASE: CANCELED */}
             {currentStatus === "CANCELED" ? (
               <div className="flex items-center gap-4 p-5 rounded-xl border bg-red-950/20 border-red-950 mb-8">
@@ -135,17 +135,17 @@ export default function TrackOrderPage() {
                 <div className="text-[10px] uppercase tracking-[0.2em] text-[#ececec]/50 font-mono mb-6">
                   Order Progression
                 </div>
-                
+
                 <div className="relative flex items-center justify-between w-full">
-                  
+
                   {/* Background Track Line */}
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-[#1f1f1f] z-0" />
-                  
+
                   {/* Active Progress Line */}
-                  <div 
+                  <div
                     className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-[#ececec] transition-all duration-500 z-0"
-                    style={{ 
-                      width: `${(Math.max(0, currentIndex) / (steps.length - 1)) * 100}%` 
+                    style={{
+                      width: `${(Math.max(0, currentIndex) / (steps.length - 1)) * 100}%`
                     }}
                   />
 
@@ -156,18 +156,16 @@ export default function TrackOrderPage() {
 
                     return (
                       <div key={step.key} className="relative z-10 flex flex-col items-center">
-                        <div 
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-mono transition-all duration-300 border ${
-                            isDone 
-                              ? "bg-[#ececec] text-[#050505] border-white shadow-lg shadow-white/10 scale-110" 
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-mono transition-all duration-300 border ${isDone
+                              ? "bg-[#ececec] text-[#050505] border-white shadow-lg shadow-white/10 scale-110"
                               : "bg-[#111111] text-[#ececec]/40 border-[#2a2a2a]"
-                          }`}
+                            }`}
                         >
                           {isDone ? <CheckCircle2 className="w-4 h-4" /> : (idx + 1)}
                         </div>
-                        <span className={`absolute -bottom-6 text-[10px] uppercase tracking-widest whitespace-nowrap font-mono ${
-                          isDone ? "text-[#ececec] font-bold" : "text-[#ececec]/40"
-                        }`}>
+                        <span className={`absolute -bottom-6 text-[10px] uppercase tracking-widest whitespace-nowrap font-mono ${isDone ? "text-[#ececec] font-bold" : "text-[#ececec]/40"
+                          }`}>
                           {step.label}
                         </span>
                       </div>
@@ -177,7 +175,7 @@ export default function TrackOrderPage() {
                 <div className="mt-10" /> {/* Spacer buat label bawah */}
               </div>
             )}
-            
+
             {/* Order Details Grid */}
             <div className="bg-[#111111] border border-[#1f1f1f] rounded-xl p-5 space-y-4 text-xs font-mono">
               <div className="flex justify-between items-center border-b border-[#1f1f1f] pb-3">
@@ -203,18 +201,18 @@ export default function TrackOrderPage() {
 
               <div className="flex justify-between items-center border-b border-[#1f1f1f] pb-3">
                 <span className="text-[#ececec]/50 uppercase tracking-widest">
-                   Recipient
+                  Recipient
                 </span>
                 <span className="font-bold text-[#ececec]">{result.recipientName}</span>
               </div>
-              
+
               <div className="flex justify-between items-center border-b border-[#1f1f1f] pb-3">
                 <span className="text-[#ececec]/50 uppercase tracking-widest flex items-center gap-2">
                   <Package className="w-3.5 h-3.5" /> Courier
                 </span>
                 <span className="uppercase font-bold text-[#ececec]">{result.shippingCourier ? `${result.shippingCourier} ${result.shippingService ? `(${result.shippingService})` : ""}` : (result.courier || "Pending")}</span>
               </div>
-              
+
               <div className="flex justify-between items-center">
                 <span className="text-[#ececec]/50 uppercase tracking-widest flex items-center gap-2">
                   <MapPin className="w-3.5 h-3.5" /> Tracking No. (Resi)
@@ -227,19 +225,13 @@ export default function TrackOrderPage() {
                     <button
                       type="button"
                       onClick={() => handleCopy(result.trackingNumber, "tracking")}
-                      className="px-2.5 py-1 bg-[#181818] hover:bg-[#222222] text-[#ececec] border border-[#2a2a2a] hover:border-emerald-500/40 rounded-lg transition-all flex items-center gap-1.5 text-[10px] uppercase font-mono cursor-pointer"
+                      className="p-1 hover:bg-[#222222] text-[#ececec]/60 hover:text-white rounded transition-colors cursor-pointer"
                       title="Salin Nomor Resi"
                     >
                       {copiedField === "tracking" ? (
-                        <>
-                          <Check className="w-3 h-3 text-emerald-400" />
-                          <span className="text-emerald-400 font-bold">Tersalin</span>
-                        </>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
                       ) : (
-                        <>
-                          <Copy className="w-3 h-3 text-[#ececec]/70" />
-                          <span>Salin Resi</span>
-                        </>
+                        <Copy className="w-3.5 h-3.5" />
                       )}
                     </button>
                   </div>
@@ -268,8 +260,8 @@ export default function TrackOrderPage() {
 
       {/* --- TOMBOL KEMBALI (Ditambahkan di sini) --- */}
       <div className="mt-8 flex items-center justify-center">
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="text-[#ececec]/50 hover:text-white flex items-center gap-2 text-[10px] uppercase tracking-widest transition-colors"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
