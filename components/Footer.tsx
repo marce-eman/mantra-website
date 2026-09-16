@@ -35,10 +35,10 @@ export default function Footer({ settings }: FooterProps) {
                 />
               </div>
               <ul className="space-y-3 text-xs text-[#ececec]/60 uppercase tracking-widest">
-                <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
-                <li><Link href="/shop" className="hover:text-white transition-colors">Shop</Link></li>
-                <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
-                <li><Link href="/account" className="hover:text-white transition-colors">Account</Link></li>
+                <li><Link href="/" prefetch={true} className="hover:text-white transition-colors">Home</Link></li>
+                <li><Link href="/shop" prefetch={true} className="hover:text-white transition-colors">Shop</Link></li>
+                <li><Link href="/about" prefetch={true} className="hover:text-white transition-colors">About</Link></li>
+                <li><Link href="/account" prefetch={true} className="hover:text-white transition-colors">Account</Link></li>
               </ul>
             </div>
 

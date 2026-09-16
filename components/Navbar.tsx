@@ -98,10 +98,10 @@ export default function Navbar() {
             </button>
 
             <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" onClick={() => handleNavClick("home")} className={pathname === "/" && activeTab === "home" ? activeStyle : inactiveStyle}>
+              <Link href="/" prefetch={true} onClick={() => handleNavClick("home")} className={pathname === "/" && activeTab === "home" ? activeStyle : inactiveStyle}>
                 Home
               </Link>
-              <Link href="/#collection" onClick={() => handleNavClick("collection")} className={pathname === "/" && activeTab === "collection" ? activeStyle : inactiveStyle}>
+              <Link href="/#collection" prefetch={true} onClick={() => handleNavClick("collection")} className={pathname === "/" && activeTab === "collection" ? activeStyle : inactiveStyle}>
                 Episodes
               </Link>
             </div>
@@ -109,7 +109,7 @@ export default function Navbar() {
 
           {/* CENTER: Logo Mantra */}
           <div className="flex-shrink-0 flex justify-center px-2">
-            <Link href="/" onClick={() => handleNavClick("home")} className="flex items-center">
+            <Link href="/" prefetch={true} onClick={() => handleNavClick("home")} className="flex items-center">
               <Image src="/images/ICON CHROME 1.png" alt="Mantra Icon" width={32} height={32} className="object-contain w-7 h-7 md:w-8 md:h-8" />
             </Link>
           </div>
@@ -118,7 +118,7 @@ export default function Navbar() {
           <div className="flex-1 flex items-center justify-end md:justify-start md:space-x-8 md:pl-12">
             
             <div className="hidden md:block">
-              <Link href="/shop" onClick={() => handleNavClick("shop")} className={pathname === "/shop" ? activeStyle : inactiveStyle}>
+              <Link href="/shop" prefetch={true} onClick={() => handleNavClick("shop")} className={pathname === "/shop" ? activeStyle : inactiveStyle}>
                 Catalogue
               </Link>
             </div>
@@ -175,6 +175,7 @@ export default function Navbar() {
         <div className="flex flex-col px-8 py-10 space-y-8">
           <Link 
             href="/" 
+            prefetch={true}
             onClick={() => handleNavClick("home")} 
             className={pathname === "/" && activeTab === "home" ? mobileActiveStyle : mobileInactiveStyle}
           >
@@ -182,6 +183,7 @@ export default function Navbar() {
           </Link>
           <Link 
             href="/#collection" 
+            prefetch={true}
             onClick={() => handleNavClick("collection")} 
             className={pathname === "/" && activeTab === "collection" ? mobileActiveStyle : mobileInactiveStyle}
           >
@@ -189,6 +191,7 @@ export default function Navbar() {
           </Link>
           <Link 
             href="/shop" 
+            prefetch={true}
             onClick={() => handleNavClick("shop")} 
             className={pathname === "/shop" ? mobileActiveStyle : mobileInactiveStyle}
           >

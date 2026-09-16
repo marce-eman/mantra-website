@@ -9,9 +9,10 @@ import CartDrawer from "@/components/CartDrawer";
 import FloatingChat from "@/components/FloatingChat";
 import { Providers } from "@/components/Providers";
 import { StoreNavbarWrapper, StoreBottomWrapper } from "@/components/StoreUIWrapper";
+import { getCachedUserProfile } from "@/lib/userProfile";
 import "./globals.css";
 
-export const dynamic = "force-dynamic";
+export const preferredRegion = "sin1";
 
 export const metadata: Metadata = {
   title: "MANTRA — A Manifestation Born From The Shadows",
@@ -35,13 +36,7 @@ export default async function RootLayout({
   let hasOrders = false;
 
   if (session?.user?.id) {
-    const dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      include: {
-        _count: { select: { orders: true } },
-      },
-    });
-
+    const dbUser = await getCachedUserProfile(session.user.id);
     isAdmin = dbUser?.role?.toUpperCase() === "ADMIN";
     hasOrders = (dbUser?._count?.orders ?? 0) > 0;
   }
