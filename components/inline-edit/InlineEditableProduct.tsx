@@ -343,20 +343,20 @@ export function InlineEditableProduct({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-[#1f1f1f] pt-4">
                     <div className="space-y-2">
                       <label className="block text-[11px] uppercase tracking-wider text-[#ececec]/80 font-bold">
-                        PRICE (USD $)
+                        PRICE (IDR Rp)
                       </label>
                       <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-400 font-bold">
-                          <DollarSign className="w-4 h-4" />
+                        <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-emerald-400 font-bold text-xs">
+                          Rp
                         </div>
                         <input
                           type="number"
-                          step="0.01"
+                          step="1000"
                           min="0"
                           value={price}
                           onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
                           disabled={isSaving}
-                          className="w-full bg-[#111111] border border-[#2a2a2a] focus:border-emerald-500 rounded-xl pl-9 pr-4 py-3 text-sm text-[#ececec] font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
+                          className="w-full bg-[#111111] border border-[#2a2a2a] focus:border-emerald-500 rounded-xl pl-10 pr-4 py-3 text-sm text-[#ececec] font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500 transition-all"
                         />
                       </div>
                     </div>

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCartStore } from "@/store/useCartStore";
-import { cn } from "@/lib/utils";
+import { cn, formatRupiah } from "@/lib/utils";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { addToCartAction } from "@/app/actions/cart";
 import { InlineEditableProduct } from "@/components/inline-edit";
@@ -165,9 +165,9 @@ export default function ProductDetailClient({ product }: { product: ProductProps
               {product.name}
             </h1>
             
-            {/* PRODUCT PRICE IN USD */}
+            {/* PRODUCT PRICE IN IDR */}
             <p className="text-[#ececec] font-mono text-xl md:text-2xl mb-8">
-              ${product.price.toFixed(2)} USD
+              {formatRupiah(product.price)}
             </p>
 
             <div className="prose prose-invert border-y border-[#1f1f1f] py-6 mb-8">

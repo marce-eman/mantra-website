@@ -5,6 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, CreditCard, ShoppingBag, Truck } from "lucide-react";
 import { getSiteSetting } from "@/lib/siteSettings";
+import { formatRupiah } from "@/lib/utils";
 
 export default async function OrderDetailPage({
   params,
@@ -121,13 +122,13 @@ export default async function OrderDetailPage({
                       {item.product?.name || "Product"}
                     </h3>
                     <p className="text-[10px] text-[#ececec]/40 font-mono mt-1">
-                      {item.quantity} x ${item.price.toFixed(2)}
+                      {item.quantity} x {formatRupiah(item.price)}
                     </p>
                   </div>
                 </div>
 
                 <span className="text-xs font-mono font-bold text-emerald-400">
-                  ${(item.price * item.quantity).toFixed(2)} USD
+                  {formatRupiah(item.price * item.quantity)}
                 </span>
               </div>
             );
@@ -140,9 +141,14 @@ export default async function OrderDetailPage({
           <h2 className="text-xs font-bold uppercase tracking-widest text-[#ececec]/50 flex items-center gap-2">
             <Truck className="w-4 h-4" /> Shipping Destination
           </h2>
-          <p className="text-xs text-[#ececec]/70 font-light leading-relaxed">
+          <p className="text-xs text-[#ececec]/70 font-light leading-relaxed font-mono">
             {order.address || "No shipping address specified."}
           </p>
+          {order.shippingCourier && (
+            <p className="text-xs text-[#ececec]/50 font-mono">
+              Courier: {order.shippingCourier} {order.shippingService ? `(${order.shippingService})` : ""}
+            </p>
+          )}
         </div>
 
         <div className="bg-[#0a0a0a] border border-[#1f1f1f] p-5 rounded-xl space-y-3">
@@ -151,13 +157,13 @@ export default async function OrderDetailPage({
           </h2>
           <div className="space-y-2 text-xs">
             <div className="flex justify-between text-[#ececec]/60">
-              <span>Items Amount</span>
-              <span className="font-mono">${order.totalAmount.toFixed(2)} USD</span>
+              <span>Grand Total</span>
+              <span className="font-mono">{formatRupiah(order.totalAmount)}</span>
             </div>
             <div className="border-t border-[#1f1f1f] pt-2 flex justify-between font-bold text-[#ececec]">
-              <span>TOTAL ITEMS</span>
+              <span>TOTAL PAID</span>
               <span className="font-mono text-emerald-400">
-                ${order.totalAmount.toFixed(2)} USD
+                {formatRupiah(order.totalAmount)}
               </span>
             </div>
           </div>

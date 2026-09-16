@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Script from "next/script";
 import { useCartStore } from "@/store/useCartStore";
-import { cn } from "@/lib/utils";
+import { cn, formatRupiah } from "@/lib/utils";
 import { Truck, ShieldCheck, CreditCard, ChevronRight, Loader2, CheckCircle2 } from "lucide-react";
 
 declare global {
@@ -456,7 +456,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
 
                             <div className="text-right font-mono">
                               <span className="text-xs font-bold text-emerald-400">
-                                Rp {rate.price.toLocaleString("id-ID")}
+                                {formatRupiah(rate.price)}
                               </span>
                             </div>
                           </label>
@@ -518,7 +518,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                       </>
                     ) : (
                       <>
-                        Pay Now • Rp {grandTotal.toLocaleString("id-ID")}
+                        Pay Now • {formatRupiah(grandTotal)}
                       </>
                     )}
                   </button>
@@ -559,7 +559,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                         {item.selectedSize} / {item.selectedColor}
                       </p>
                       <p className="text-xs font-mono text-emerald-400 mt-1">
-                        {item.quantity} x Rp {item.price.toLocaleString("id-ID")}
+                        {item.quantity} x {formatRupiah(item.price)}
                       </p>
                     </div>
                   </div>
@@ -570,21 +570,21 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                 <div className="flex justify-between text-[#ececec]/60 uppercase tracking-widest">
                   <span>Subtotal</span>
                   <span className="font-mono text-[#ececec]">
-                    Rp {subtotal.toLocaleString("id-ID")}
+                    {formatRupiah(subtotal)}
                   </span>
                 </div>
 
                 <div className="flex justify-between text-[#ececec]/60 uppercase tracking-widest">
                   <span>Shipping ({selectedRate?.courier_name || "Courier"})</span>
                   <span className="font-mono text-emerald-400">
-                    {selectedRate ? `Rp ${selectedRate.price.toLocaleString("id-ID")}` : "Select in Step 2"}
+                    {selectedRate ? formatRupiah(selectedRate.price) : "Select in Step 2"}
                   </span>
                 </div>
 
                 <div className="border-t border-[#1f1f1f] pt-3 flex justify-between uppercase tracking-widest font-bold text-sm">
                   <span>Grand Total</span>
                   <span className="font-mono text-emerald-400">
-                    Rp {grandTotal.toLocaleString("id-ID")}
+                    {formatRupiah(grandTotal)}
                   </span>
                 </div>
               </div>

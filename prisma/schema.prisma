@@ -73,7 +73,7 @@ model Product {
   name           String
   slug           String     @unique
   description    String     @db.Text
-  price          Float      // DIUBAH KE FLOAT UNTUK HARGA USD ($)
+  price          Float      // Harga dalam Rupiah (IDR / Rp)
   stock          Int        @default(0)
   weight         Int        @default(500) // Berat dalam gram untuk kalkulasi Biteship
   images         String[]
@@ -134,7 +134,7 @@ model Order {
   phone           String
   address         String      @db.Text
   
-  totalAmount     Float       // USD / IDR Grand Total
+  totalAmount     Float       // IDR Grand Total
   
   status          OrderStatus @default(PENDING)
   courier         String?     // Contoh: JNE, J&T, dll
@@ -160,7 +160,7 @@ model OrderItem {
   name      String   // Menyimpan nama produk saat itu dibeli
   size      String   // Ukuran yang dipilih
   color     String   // Warna yang dipilih
-  price     Float    // Harga saat dibeli dalam USD
+  price     Float    // Harga saat dibeli dalam IDR
   quantity  Int
 
   createdAt DateTime @default(now())

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ExternalLink, Clock, Package, Truck, CheckCircle2, XCircle } from "lucide-react";
 import CopyOrderButton from "@/components/CopyOrderButton";
+import { formatRupiah } from "@/lib/utils";
 
 export default async function AccountOrdersPage() {
   const session = await auth();
@@ -159,7 +160,7 @@ export default async function AccountOrdersPage() {
                           </p>
                         </div>
                         <span className="text-xs font-mono text-[#ececec]">
-                          ${(item.price * item.quantity).toFixed(2)} USD
+                          {formatRupiah(item.price * item.quantity)}
                         </span>
                       </div>
                     );
@@ -168,9 +169,9 @@ export default async function AccountOrdersPage() {
 
                 <div className="border-t border-[#1f1f1f] pt-4 flex flex-col sm:flex-row justify-between sm:items-center gap-3 text-xs tracking-widest uppercase">
                   <div className="flex items-center gap-2">
-                    <span className="text-[#ececec]/50">Items Amount:</span>
+                    <span className="text-[#ececec]/50">Total Amount:</span>
                     <span className="text-emerald-400 font-mono font-bold text-sm">
-                      ${order.totalAmount.toFixed(2)} USD
+                      {formatRupiah(order.totalAmount)}
                     </span>
                   </div>
 

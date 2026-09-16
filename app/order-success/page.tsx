@@ -7,6 +7,7 @@ import { CheckCircle2, ArrowRight, ShoppingBag, Truck, CreditCard, MessageCircle
 import CopyOrderButton from "@/components/CopyOrderButton";
 import { getSiteSetting } from "@/lib/siteSettings";
 import { getAssetUrl } from "@/lib/assetUrls";
+import { formatRupiah } from "@/lib/utils";
 
 export default async function OrderSuccessPage({
   searchParams,
@@ -47,7 +48,7 @@ export default async function OrderSuccessPage({
   const isPaid = order.paymentStatus === "PAID" || order.status === "PAID";
 
   const waText = encodeURIComponent(
-    `Hello Admin MANTRA, I have placed an order #${finalOrderId}.\nTotal: Rp ${Math.round(order.totalAmount).toLocaleString("id-ID")}\nPayment Status: ${order.paymentStatus}\nCourier: ${order.shippingCourier || order.courier || "Courier"}`
+    `Hello Admin MANTRA, I have placed an order #${finalOrderId}.\nTotal: ${formatRupiah(order.totalAmount)}\nPayment Status: ${order.paymentStatus}\nCourier: ${order.shippingCourier || order.courier || "Courier"}`
   );
 
   return (
@@ -112,11 +113,11 @@ export default async function OrderSuccessPage({
             )}
             <div className="flex justify-between text-[#ececec]/70">
               <span>Shipping Fee:</span>
-              <span>Rp {Number(order.shippingCost || 0).toLocaleString("id-ID")}</span>
+              <span>{formatRupiah(order.shippingCost)}</span>
             </div>
             <div className="flex justify-between text-[#ececec] border-t border-[#1f1f1f] pt-2 text-sm font-bold">
               <span>Grand Total:</span>
-              <span className="text-emerald-400">Rp {Math.round(order.totalAmount).toLocaleString("id-ID")}</span>
+              <span className="text-emerald-400">{formatRupiah(order.totalAmount)}</span>
             </div>
           </div>
         </div>
@@ -145,7 +146,7 @@ export default async function OrderSuccessPage({
                     <div className="flex-grow">
                       <p className="font-medium uppercase line-clamp-1">{(product?.name as string) || item.name}</p>
                       <p className="text-[10px] text-[#ececec]/50 font-mono">
-                        {item.quantity} x Rp {Math.round(item.price).toLocaleString("id-ID")}
+                        {item.quantity} x {formatRupiah(item.price)}
                       </p>
                     </div>
                   </div>

@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { InlineEditableProduct } from "@/components/inline-edit";
 import { getAssetUrl } from "@/lib/assetUrls";
+import { formatRupiah } from "@/lib/utils";
 
 export default function ProductCard({ item }: { item: any }) {
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -73,9 +74,9 @@ export default function ProductCard({ item }: { item: any }) {
           </div>
 
           <div className="flex items-center justify-between border-t border-[#1f1f1f] pt-4 mt-auto">
-            {/* PRODUCT PRICE IN USD */}
+            {/* PRODUCT PRICE IN IDR */}
             <span className="text-sm font-bold text-emerald-400 font-mono">
-              ${item.price.toFixed(2)} USD
+              {formatRupiah(item.price)}
             </span>
 
             <span className="text-[10px] uppercase tracking-widest text-[#ececec]/60 bg-[#181818] px-3 py-1.5 rounded-lg border border-[#2a2a2a]">

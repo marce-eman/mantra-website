@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { formatRupiah } from "@/lib/utils";
 
 export default async function AdminDashboardPage() {
   // Ambil total data dari database
@@ -29,7 +30,7 @@ export default async function AdminDashboardPage() {
       <div className="bg-[#0a0a0a] border border-[#1f1f1f] p-6 rounded-2xl flex flex-col justify-between"> 
         <h3 className="text-[10px] text-[#ececec]/60 uppercase tracking-widest mb-4">Total Revenue</h3> 
         <p className="text-2xl font-mono text-emerald-400">
-          ${totalRevenue.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          {formatRupiah(totalRevenue)}
         </p> 
       </div>
         

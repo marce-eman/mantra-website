@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Truck, CreditCard, Package, CheckCircle2, Clock, AlertTriangle, XCircle, Search } from "lucide-react";
+import { formatRupiah } from "@/lib/utils";
 
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
@@ -228,11 +229,11 @@ export default function AdminOrdersPage() {
                     {/* Total Amount */}
                     <td className="p-4 font-mono text-xs">
                       <div className="text-emerald-400 font-bold">
-                        Rp {Math.round(ord.totalAmount).toLocaleString("id-ID")}
+                        {formatRupiah(ord.totalAmount)}
                       </div>
                       {ord.shippingCost > 0 && (
                         <div className="text-[10px] text-[#ececec]/40">
-                          (Shipping: Rp {ord.shippingCost.toLocaleString("id-ID")})
+                          (Shipping: {formatRupiah(ord.shippingCost)})
                         </div>
                       )}
                     </td>
@@ -346,7 +347,7 @@ export default function AdminOrdersPage() {
                                       </div>
                                     </div>
                                     <span className="font-mono text-emerald-400 shrink-0">
-                                      Rp {Math.round(item.price * item.quantity).toLocaleString("id-ID")}
+                                      {formatRupiah(item.price * item.quantity)}
                                     </span>
                                   </li>
                                 ))}
@@ -364,7 +365,7 @@ export default function AdminOrdersPage() {
                             <div className="text-xs text-[#ececec]/80 space-y-2 font-mono leading-relaxed">
                               <p><span className="text-[#ececec]/40 block text-[10px] uppercase">Destination Address:</span> {ord.address || "N/A"}</p>
                               <p><span className="text-[#ececec]/40 block text-[10px] uppercase">Courier & Service:</span> {ord.shippingCourier || ord.courier || "-"} ({ord.shippingService || "Standard"})</p>
-                              <p><span className="text-[#ececec]/40 block text-[10px] uppercase">Shipping Cost:</span> Rp {Number(ord.shippingCost || 0).toLocaleString("id-ID")}</p>
+                              <p><span className="text-[#ececec]/40 block text-[10px] uppercase">Shipping Cost:</span> {formatRupiah(ord.shippingCost)}</p>
                               <p><span className="text-[#ececec]/40 block text-[10px] uppercase">Tracking Number:</span> {ord.trackingNumber || "Pending Dispatch"}</p>
                             </div>
                           </div>
@@ -377,7 +378,7 @@ export default function AdminOrdersPage() {
                             <div className="text-xs text-[#ececec]/80 space-y-2 font-mono leading-relaxed">
                               <p><span className="text-[#ececec]/40 block text-[10px] uppercase">Payment Status:</span> {ord.paymentStatus || "PENDING"}</p>
                               <p><span className="text-[#ececec]/40 block text-[10px] uppercase">Snap Token:</span> <span className="text-[10px] break-all">{ord.snapToken || "N/A"}</span></p>
-                              <p><span className="text-[#ececec]/40 block text-[10px] uppercase">Grand Total Charged:</span> Rp {Math.round(ord.totalAmount).toLocaleString("id-ID")}</p>
+                              <p><span className="text-[#ececec]/40 block text-[10px] uppercase">Grand Total Charged:</span> {formatRupiah(ord.totalAmount)}</p>
                             </div>
                           </div>
 

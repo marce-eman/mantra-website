@@ -4,6 +4,7 @@ import ImageUpload from "@/components/ImageUpload";
 import { useState } from "react";
 import { Plus, Edit2, Trash2, Sparkles, Layers } from "lucide-react";
 import { saveArticleAction, deleteArticleAction } from "@/app/actions/article";
+import { formatRupiah } from "@/lib/utils";
 
 export default function ArticlesClient({
   initialEpisodes,
@@ -168,7 +169,7 @@ export default function ArticlesClient({
                             </div>
                           </td>
                           <td className="px-6 py-4 font-mono">
-                            <span className="text-emerald-400 font-bold">${art.price.toFixed(2)} USD</span>
+                            <span className="text-emerald-400 font-bold">{formatRupiah(art.price)}</span>
                             <br />
                             <span className="text-[#ececec]/50 text-[10px]">Stock: {art.stock}</span>
                           </td>
@@ -239,7 +240,7 @@ export default function ArticlesClient({
                           </div>
                         </td>
                         <td className="px-6 py-4 font-mono">
-                          <span className="text-emerald-400 font-bold">${art.price.toFixed(2)} USD</span>
+                          <span className="text-emerald-400 font-bold">{formatRupiah(art.price)}</span>
                           <br />
                           <span className="text-[#ececec]/50 text-[10px]">Stock: {art.stock}</span>
                         </td>
@@ -322,11 +323,11 @@ export default function ArticlesClient({
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-[#ececec]/60 mb-1.5 uppercase tracking-wider">
-                    Price (USD $)
+                    Price (IDR Rp)
                   </label>
                   <input
                     type="number"
-                    step="0.01"
+                    step="1000"
                     required
                     value={formData.price}
                     onChange={(e) => setFormData({ ...formData, price: Number(e.target.value) })}

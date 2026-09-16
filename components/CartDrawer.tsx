@@ -6,6 +6,7 @@ import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
 import { getAssetUrl } from "@/lib/assetUrls";
 import { useCartStore } from "@/store/useCartStore";
 import { removeFromCartAction, updateCartQuantityAction } from "@/app/actions/cart";
+import { formatRupiah } from "@/lib/utils";
 
 export default function CartDrawer() {
   const { items, isDrawerOpen, closeDrawer, removeItem, updateQuantity, getSubtotal } =
@@ -89,9 +90,9 @@ export default function CartDrawer() {
                         {item.selectedSize} / {item.selectedColor}
                       </p>
                       
-                      {/* HARGA PER ITEM DIUBAH KE USD */}
+                      {/* HARGA PER ITEM DIUBAH KE IDR */}
                       <p className="text-xs font-mono font-bold text-emerald-400 mt-1">
-                        ${(item.price * item.quantity).toFixed(2)} USD
+                        {formatRupiah(item.price * item.quantity)}
                       </p>
                       
                       <div className="flex items-center gap-2 mt-2">
@@ -129,9 +130,9 @@ export default function CartDrawer() {
             <div className="flex justify-between text-xs uppercase tracking-widest">
               <span className="text-[#ececec]/60">Subtotal</span>
               
-              {/* SUBTOTAL DIUBAH KE USD */}
+              {/* SUBTOTAL DIUBAH KE IDR */}
               <span className="font-mono font-bold text-emerald-400">
-                ${subtotal.toFixed(2)} USD
+                {formatRupiah(subtotal)}
               </span>
               
             </div>
