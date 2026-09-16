@@ -18,7 +18,7 @@ export async function POST(req: Request) {
 
     if (!session?.user?.id) {
       return NextResponse.json(
-        { success: false, message: "Unauthorized. Please log in to complete checkout." },
+        { success: false, error: "Unauthorized. Please log in to complete checkout.", message: "Unauthorized. Please log in to complete checkout." },
         { status: 401 }
       );
     }
@@ -37,42 +37,50 @@ export async function POST(req: Request) {
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
-        { success: false, message: "Your cart is empty." },
+        { success: false, error: "Your cart is empty.", message: "Your cart is empty." },
         { status: 400 }
       );
     }
 
     if (!recipientName || !phone || !shippingAddress) {
       return NextResponse.json(
-        { success: false, message: "Name, phone number, and address are required." },
+        { success: false, error: "Name, phone number, and address are required.", message: "Name, phone number, and address are required." },
         { status: 400 }
       );
     }
 
-    // Calculate item subtotal
+    // 1. SANITASI & VALIDASI SERVER KEY (Sandbox environment)
+    const serverKey = process.env.MIDTRANS_SERVER_KEY?.trim() || "";
+    if (!serverKey) {
+      console.error("[MIDTRANS CHECKOUT ERROR]: MIDTRANS_SERVER_KEY is not configured or empty.");
+      return NextResponse.json(
+        { success: false, error: "Payment gateway server key is not configured.", message: "Payment gateway configuration error." },
+        { status: 500 }
+      );
+    }
+
+    // Calculate item subtotal (integer)
     const itemsSubtotal = items.reduce(
-      (sum: number, item: OrderItemInput) => sum + Number(item.price) * Number(item.quantity),
+      (sum: number, item: OrderItemInput) => sum + Math.round(Number(item.price)) * Math.max(1, Math.round(Number(item.quantity) || 1)),
       0
     );
     const parsedShippingCost = Math.max(0, Math.round(Number(shippingCost) || 0));
-    const grandTotal = itemsSubtotal + parsedShippingCost;
+    const grossAmount = Math.round(Number(itemsSubtotal + parsedShippingCost));
 
-    // Generate Order Number: MTR-YYYYMMDD-XXX
-    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-    const randomSuffix = Math.floor(100 + Math.random() * 900);
-    const orderNumber = `MTR-${dateStr}-${randomSuffix}`;
+    // Temporary order number
+    const tempOrderNumber = `MTR-${Date.now()}`;
 
     // Perform DB transaction: create order, decrement stocks, clear cart
     const order = await prisma.$transaction(async (tx) => {
       const newOrder = await tx.order.create({
         data: {
-          orderNumber,
+          orderNumber: tempOrderNumber,
           userId: session.user.id,
           recipientName: recipientName.trim(),
           email: email?.trim() || session.user.email || "no-email@mantra.com",
           phone: phone.trim(),
           address: shippingAddress.trim(),
-          totalAmount: grandTotal,
+          totalAmount: grossAmount,
           status: "PENDING",
           paymentStatus: "PENDING",
           courier: shippingCourier ? `${shippingCourier} - ${shippingService || "Standard"}` : "PENDING",
@@ -85,8 +93,8 @@ export async function POST(req: Request) {
               name: item.name || "Mantra Item",
               size: item.size || "ALL SIZE",
               color: item.color || "BLACK",
-              quantity: Number(item.quantity) || 1,
-              price: Number(item.price),
+              quantity: Math.max(1, Math.round(Number(item.quantity) || 1)),
+              price: Math.round(Number(item.price)),
             })),
           },
         },
@@ -99,7 +107,7 @@ export async function POST(req: Request) {
             where: { id: item.productId },
             data: {
               stock: {
-                decrement: Number(item.quantity) || 1,
+                decrement: Math.max(1, Math.round(Number(item.quantity) || 1)),
               },
             },
           });
@@ -114,26 +122,24 @@ export async function POST(req: Request) {
       return newOrder;
     });
 
-    // Prepare Midtrans Snap Request
-    const serverKey = process.env.MIDTRANS_SERVER_KEY;
-    if (!serverKey) {
-      console.error("[MIDTRANS]: MIDTRANS_SERVER_KEY is not configured.");
-      return NextResponse.json(
-        { success: false, message: "Payment gateway configuration error." },
-        { status: 500 }
-      );
-    }
+    // 2. ENSURE VALID PAYLOAD & UNIQUE ORDER ID
+    const midtransOrderId = `MANTRA-${order.id.slice(0, 8)}-${Date.now()}`;
+
+    // Update orderNumber in DB with the unique Midtrans order id
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { orderNumber: midtransOrderId },
+    });
+
     const authHeader = `Basic ${Buffer.from(`${serverKey}:`).toString("base64")}`;
 
     // Item details for Midtrans (must sum to gross_amount)
-    const midtransItemDetails = [
-      ...items.map((item: OrderItemInput, idx: number) => ({
-        id: (item.productId || `item-${idx + 1}`).slice(0, 50),
-        price: Math.round(Number(item.price)),
-        quantity: Math.max(1, Number(item.quantity) || 1),
-        name: (item.name || `Item ${idx + 1}`).slice(0, 50),
-      })),
-    ];
+    const midtransItemDetails = items.map((item: OrderItemInput, idx: number) => ({
+      id: (item.productId || `item-${idx + 1}`).slice(0, 50),
+      price: Math.round(Number(item.price)),
+      quantity: Math.max(1, Math.round(Number(item.quantity) || 1)),
+      name: (item.name || `Item ${idx + 1}`).slice(0, 50),
+    }));
 
     if (parsedShippingCost > 0) {
       midtransItemDetails.push({
@@ -146,8 +152,8 @@ export async function POST(req: Request) {
 
     const midtransPayload = {
       transaction_details: {
-        order_id: order.orderNumber,
-        gross_amount: Math.round(grandTotal),
+        order_id: midtransOrderId,
+        gross_amount: grossAmount,
       },
       customer_details: {
         first_name: recipientName.trim(),
@@ -170,9 +176,7 @@ export async function POST(req: Request) {
       },
     };
 
-    let snapToken = "";
-    let redirectUrl = "";
-
+    // 3. IMPROVE ERROR LOGGING & SNAP TOKEN GENERATION
     try {
       const snapRes = await fetch("https://app.sandbox.midtrans.com/snap/v1/transactions", {
         method: "POST",
@@ -186,33 +190,59 @@ export async function POST(req: Request) {
 
       const snapData = await snapRes.json();
 
-      if (snapRes.ok && snapData?.token) {
-        snapToken = snapData.token;
-        redirectUrl = snapData.redirect_url;
-
-        // Save snapToken to order
-        await prisma.order.update({
-          where: { id: order.id },
-          data: { snapToken },
+      if (!snapRes.ok || !snapData?.token) {
+        console.error("[MIDTRANS SNAP ERROR]:", {
+          status: snapRes.status,
+          statusText: snapRes.statusText,
+          response: snapData,
         });
-      } else {
-        console.error("[MIDTRANS SNAP ERROR]:", snapData);
+        return NextResponse.json(
+          {
+            success: false,
+            error: snapData?.error_messages?.[0] || snapData?.message || "Failed to generate Snap token from Midtrans",
+            message: snapData?.error_messages?.[0] || snapData?.message || "Failed to generate Snap token from Midtrans",
+            details: snapData,
+          },
+          { status: 500 }
+        );
       }
-    } catch (midtransErr) {
-      console.error("[MIDTRANS FETCH ERROR]:", midtransErr);
-    }
 
-    return NextResponse.json({
-      success: true,
-      orderId: order.id,
-      orderNumber: order.orderNumber,
-      snapToken,
-      redirectUrl,
-    });
+      const snapToken = snapData.token;
+      const redirectUrl = snapData.redirect_url;
+
+      // Save snapToken to order
+      await prisma.order.update({
+        where: { id: order.id },
+        data: { snapToken },
+      });
+
+      return NextResponse.json({
+        success: true,
+        orderId: order.id,
+        orderNumber: midtransOrderId,
+        snapToken,
+        token: snapToken,
+        redirectUrl,
+      });
+    } catch (midtransErr: any) {
+      console.error("[MIDTRANS SNAP EXCEPTION]:", midtransErr);
+      return NextResponse.json(
+        {
+          success: false,
+          error: midtransErr?.message || "Failed to generate Snap token",
+          message: midtransErr?.message || "Failed to generate Snap token",
+        },
+        { status: 500 }
+      );
+    }
   } catch (error: any) {
     console.error("[CHECKOUT ERROR]:", error);
     return NextResponse.json(
-      { success: false, message: error?.message || "Failed to process checkout" },
+      {
+        success: false,
+        error: error?.message || "Failed to process checkout",
+        message: error?.message || "Failed to process checkout",
+      },
       { status: 500 }
     );
   }

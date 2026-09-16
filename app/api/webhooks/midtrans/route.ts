@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const serverKey = process.env.MIDTRANS_SERVER_KEY;
+    const serverKey = process.env.MIDTRANS_SERVER_KEY?.trim() || "";
     if (!serverKey) {
       console.error("[MIDTRANS WEBHOOK]: MIDTRANS_SERVER_KEY is not configured in environment.");
       return NextResponse.json(
@@ -59,12 +59,24 @@ export async function POST(req: Request) {
     }
 
     // Find the order by orderNumber or id
-    const order = await prisma.order.findFirst({
+    let order = await prisma.order.findFirst({
       where: {
         OR: [{ orderNumber: String(order_id) }, { id: String(order_id) }],
       },
       include: { items: true },
     });
+
+    if (!order && String(order_id).startsWith("MANTRA-")) {
+      const parts = String(order_id).split("-");
+      if (parts[1]) {
+        order = await prisma.order.findFirst({
+          where: {
+            id: { startsWith: parts[1] },
+          },
+          include: { items: true },
+        });
+      }
+    }
 
     // If order does not exist in DB (e.g. test dummy payload from Midtrans dashboard)
     if (!order) {

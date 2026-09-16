@@ -163,7 +163,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
       const data = await res.json();
 
       if (!data.success || !data.orderId) {
-        throw new Error(data.message || "Failed to initiate payment.");
+        throw new Error(data.error || data.message || "Failed to initiate payment.");
       }
 
       const orderId = data.orderId;
