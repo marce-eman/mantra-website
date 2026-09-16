@@ -28,14 +28,14 @@ export default function ImageUpload({ value, onChange, multiple = false }: Image
       const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `products/${fileName}`;
 
-      const { error } = await supabase.storage.from("mantra-images").upload(filePath, file);
+      const { error } = await supabase.storage.from("site-assets").upload(filePath, file);
 
       if (error) {
         alert(`Gagal upload ${file.name}: ${error.message}`);
         continue;
       }
 
-      const { data } = supabase.storage.from("mantra-images").getPublicUrl(filePath);
+      const { data } = supabase.storage.from("site-assets").getPublicUrl(filePath);
       uploadedUrls.push(data.publicUrl);
     }
 

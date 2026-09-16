@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Film, Shirt, ShoppingCart, LogOut, Menu, X, Users } from "lucide-react";
+import { LayoutDashboard, Film, Shirt, ShoppingCart, LogOut, Menu, X, Users, Settings } from "lucide-react";
 
 export default function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,6 +24,7 @@ export default function AdminSidebar() {
     { href: "/admin/articles", icon: Shirt, label: "Articles (Shop)" },
     { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
     { href: "/admin/users", icon: Users, label: "Users" },
+    { href: "/admin/settings", icon: Settings, label: "Site Settings" },
   ];
 
   return (

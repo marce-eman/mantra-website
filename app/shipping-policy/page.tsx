@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { ArrowLeft, Truck, Clock, Globe, ShieldAlert } from "lucide-react";
+import { getSiteSetting } from "@/lib/siteSettings";
 
-export default function ShippingPolicyPage() {
+export default async function ShippingPolicyPage() {
+  const whatsappNumber = await getSiteSetting("admin_whatsapp");
   return (
     <div className="min-h-screen bg-[#050505] text-[#ececec] pt-24 pb-20 px-6 md:px-12 border-t border-[#1f1f1f]">
       <div className="max-w-4xl mx-auto space-y-12">
@@ -128,7 +130,7 @@ export default function ShippingPolicyPage() {
             <p className="text-xs text-[#ececec]/50 font-light">Reach out to our support team with your order ID.</p>
         </div>
         <a
-            href="https://wa.me/6281234567890?text=Halo%20Admin%20MANTRA,%20saya%20butuh%20bantuan%20mengenai%20pengiriman."
+            href={`https://wa.me/${whatsappNumber || "6281234567890"}?text=Halo%20Admin%20MANTRA,%20saya%20butuh%20bantuan%20mengenai%20pengiriman.`}
             target="_blank"
             rel="noopener noreferrer"
             className="bg-[#ececec] text-[#050505] px-6 py-3 rounded-xl text-xs uppercase tracking-widest font-bold hover:bg-white transition-colors shrink-0 cursor-pointer"

@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { CheckCircle2, ArrowRight, ShoppingBag, Truck, MessageCircle } from "lucide-react";
 import CopyOrderButton from "@/components/CopyOrderButton"; // <--- Import tombol Copy kita
+import { getSiteSetting } from "@/lib/siteSettings";
+import { getAssetUrl } from "@/lib/assetUrls";
 
 export default async function OrderSuccessPage({
   searchParams,
@@ -40,6 +42,7 @@ export default async function OrderSuccessPage({
     redirect("/shop");
   }
 
+  const whatsappNumber = await getSiteSetting("admin_whatsapp");
   const finalOrderId = order.orderNumber || order.id.toUpperCase();
 
   const waText = encodeURIComponent(
@@ -101,7 +104,7 @@ export default async function OrderSuccessPage({
           </p>
 
           <a
-            href={`https://wa.me/6281234567890?text=${waText}`}
+            href={`https://wa.me/${whatsappNumber || "6281234567890"}?text=${waText}`}
             target="_blank"
             rel="noopener noreferrer"
             className="block w-full max-w-sm mx-auto bg-emerald-500 hover:bg-emerald-400 text-[#050505] text-center py-4 rounded-xl text-xs uppercase tracking-widest font-bold transition-colors cursor-pointer"
@@ -119,11 +122,12 @@ export default async function OrderSuccessPage({
             <div className="space-y-3 max-h-48 overflow-y-auto pr-1">
               {order.items.map((item) => {
                 const product = item.product as Record<string, unknown>;
-                const productImage =
+                const rawImage =
                   (product?.image as string) ||
                   ((product?.images as string[])?.[0]) ||
                   (product?.imageUrl as string) ||
                   "/images/placeholder.jpg";
+                const productImage = getAssetUrl(rawImage);
 
                 return (
                   <div key={item.id} className="flex items-center gap-3 text-xs">

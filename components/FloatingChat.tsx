@@ -13,7 +13,11 @@ type Message = {
   userMessage?: string;
 };
 
-export default function FloatingChat() {
+interface FloatingChatProps {
+  whatsappNumber?: string;
+}
+
+export default function FloatingChat({ whatsappNumber = "6281234567890" }: FloatingChatProps) {
   const { data: session } = useSession();
   const router = useRouter();
 
@@ -23,8 +27,7 @@ export default function FloatingChat() {
   ]);
   const [input, setInput] = useState("");
 
-  // NOMOR WA ADMIN MANTRA (Gunakan awalan 62)
-  const waNumber = "6281234567890"; 
+  const waNumber = whatsappNumber || "6281234567890"; 
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();

@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { X, Trash2, ShoppingBag } from "lucide-react";
+import { X, Trash2, Plus, Minus, ShoppingBag, ArrowRight } from "lucide-react";
+import { getAssetUrl } from "@/lib/assetUrls";
 import { useCartStore } from "@/store/useCartStore";
 import { removeFromCartAction, updateCartQuantityAction } from "@/app/actions/cart";
 
@@ -74,7 +75,7 @@ export default function CartDrawer() {
                   >
                     <div className="relative aspect-square w-16 bg-[#181818] rounded-lg overflow-hidden flex-shrink-0">
                       <Image
-                        src={item.image || "/images/placeholder.jpg"}
+                        src={getAssetUrl(item.image || "/images/placeholder.jpg")}
                         alt={item.name}
                         fill
                         className="object-cover"

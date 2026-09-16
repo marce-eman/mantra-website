@@ -2,6 +2,7 @@
 
 import { SessionProvider } from "next-auth/react";
 import SatpamGaib from "@/components/SatpamGaib";
+import { InlineEditProvider } from "@/components/inline-edit";
 import { ReactNode } from "react";
 
 interface ProvidersProps {
@@ -15,7 +16,9 @@ export function Providers({ children, isFriday, isAdmin, hasOrders }: ProvidersP
   return (
     <SessionProvider>
       <SatpamGaib isFriday={isFriday} isAdmin={isAdmin} hasOrders={hasOrders}>
-        {children}
+        <InlineEditProvider>
+          {children}
+        </InlineEditProvider>
       </SatpamGaib>
     </SessionProvider>
   );

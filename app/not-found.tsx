@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Search, LogIn } from "lucide-react";
+import { getAssetUrl } from "@/lib/assetUrls";
 
 // === PINDAHKAN BANNER KE LUAR SINI ===
 // Agar komponen ini independen dan animasinya tidak ke-reset oleh timer jam
@@ -14,7 +15,7 @@ const Banner = () => (
         <span key={i} className="flex items-center space-x-8 mx-6 text-[#ececec]/30 text-[10px] uppercase tracking-[0.3em] font-mono shrink-0">
           <span>MANTRA</span>
           <span className="w-1 h-1 rounded-full bg-current inline-block" />
-          <Image src="/images/ICON CHROME 1.png" alt="icon" width={10} height={10} className="object-contain opacity-50 shrink-0" />
+          <Image src={getAssetUrl("/images/ICON CHROME 1.png")} alt="icon" width={10} height={10} className="object-contain opacity-50 shrink-0" />
           <span className="w-1 h-1 rounded-full bg-current inline-block" />
         </span>
       ))}
@@ -56,20 +57,20 @@ export default function NotFound() {
 
       {/* JAM UTAMA */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[75vw] max-w-[480px] aspect-square z-20">
-        <Image src="/images/Bacground-jam1.png" alt="Mantra Clock" fill priority sizes="(max-width: 640px) 75vw, 480px" className="object-contain drop-shadow-2xl" />
+        <Image src={getAssetUrl("/images/Bacground-jam1.png")} alt="Mantra Clock" fill priority sizes="(max-width: 640px) 75vw, 480px" className="object-contain drop-shadow-2xl" />
 
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute inset-0" style={{ transform: `rotate(${hourDeg}deg)`, transformOrigin: "50% 50%" }}>
-            <img src="/images/hour-hand.png" alt="Hour" draggable={false} className="absolute top-1/2 left-1/2 h-[22%] w-auto max-w-none select-none drop-shadow-md" style={{ transform: "translate(-82.5%, -83%)" }} />
+            <img src={getAssetUrl("/images/hour-hand.png")} alt="Hour" draggable={false} className="absolute top-1/2 left-1/2 h-[22%] w-auto max-w-none select-none drop-shadow-md" style={{ transform: "translate(-82.5%, -83%)" }} />
           </div>
           <div className="absolute inset-0" style={{ transform: `rotate(${minuteDeg}deg)`, transformOrigin: "50% 50%" }}>
-            <img src="/images/minute-hand.png" alt="Minute" draggable={false} className="absolute top-1/2 left-1/2 h-[32%] w-auto max-w-none select-none drop-shadow-lg" style={{ transform: "translate(-9.5%, -89.5%)" }} />
+            <img src={getAssetUrl("/images/minute-hand.png")} alt="Minute" draggable={false} className="absolute top-1/2 left-1/2 h-[32%] w-auto max-w-none select-none drop-shadow-lg" style={{ transform: "translate(-9.5%, -89.5%)" }} />
           </div>
           <div className="absolute inset-0" style={{ transform: `rotate(${secondDeg}deg)`, transformOrigin: "50% 50%" }}>
             <div className="absolute top-1/2 left-1/2 w-[2px] h-[38%] bg-gradient-to-t from-[#888888] via-[#dddddd] to-[#ffffff] rounded-t-sm" style={{ transform: "translate(-50%, -100%)" }} />
           </div>
           <div className="absolute top-1/2 left-1/2 h-[7%] aspect-square z-50" style={{ transform: "translate(-50%, -50%)" }}>
-            <img src="/images/center-cap.png" alt="Center Pivot" draggable={false} className="w-full h-full object-contain select-none drop-shadow-xl" />
+            <img src={getAssetUrl("/images/center-cap.png")} alt="Center Pivot" draggable={false} className="w-full h-full object-contain select-none drop-shadow-xl" />
           </div>
         </div>
 

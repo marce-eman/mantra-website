@@ -16,9 +16,10 @@ interface CheckoutClientProps {
     email: string | null;
     address: string | null;
   } | null;
+  whatsappNumber?: string;
 }
 
-export default function CheckoutClient({ user }: CheckoutClientProps) {
+export default function CheckoutClient({ user, whatsappNumber = "6281234567890" }: CheckoutClientProps) {
   const router = useRouter();
   const { items, getSubtotal, clearCart } = useCartStore();
 
@@ -35,7 +36,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
   // Total di website pure hanya total produk, ongkir dihitung terpisah di WA
   const total = subtotal; 
 
-  const ADMIN_WHATSAPP = "6281234567890"; // Ganti dengan nomor WhatsApp Admin
+  const ADMIN_WHATSAPP = whatsappNumber || "6281234567890";
 
   const handlePlaceOrder = async () => {
     if (items.length === 0) {

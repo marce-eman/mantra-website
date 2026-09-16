@@ -9,6 +9,8 @@ import { useCartStore } from "@/store/useCartStore";
 import { cn } from "@/lib/utils";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { addToCartAction } from "@/app/actions/cart";
+import { InlineEditableProduct } from "@/components/inline-edit";
+import { getAssetUrl } from "@/lib/assetUrls";
 
 interface ProductProps {
   id: string;
@@ -62,7 +64,7 @@ export default function ProductDetailClient({ product }: { product: ProductProps
 
     addItem({
       ...product,
-      image: product.images[0] || "/images/placeholder.jpg",
+      image: getAssetUrl(product.images[0] || "/images/placeholder.jpg"),
       quantity,
       selectedColor: "Exclusive",
       selectedSize,
@@ -82,7 +84,7 @@ export default function ProductDetailClient({ product }: { product: ProductProps
 
     addItem({
       ...product,
-      image: product.images[0] || "/images/placeholder.jpg",
+      image: getAssetUrl(product.images[0] || "/images/placeholder.jpg"),
       quantity,
       selectedColor: "Exclusive",
       selectedSize,
@@ -95,12 +97,17 @@ export default function ProductDetailClient({ product }: { product: ProductProps
     <div className="bg-[#050505] min-h-screen border-t border-[#1f1f1f]">
       <div className="max-w-screen-2xl mx-auto px-4 py-8">
         {/* Breadcrumbs */}
-        <div className="flex items-center space-x-2 text-xs uppercase tracking-widest text-[#ececec]/40 mb-8">
-          <Link href="/" className="hover:text-white">Home</Link>
-          <ChevronRight className="w-3 h-3" />
-          <Link href="/shop" className="hover:text-white">Shop</Link>
-          <ChevronRight className="w-3 h-3" />
-          <span className="text-[#ececec]">{product.name}</span>
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-2 text-xs uppercase tracking-widest text-[#ececec]/40">
+            <Link href="/" className="hover:text-white">Home</Link>
+            <ChevronRight className="w-3 h-3" />
+            <Link href="/shop" className="hover:text-white">Shop</Link>
+            <ChevronRight className="w-3 h-3" />
+            <span className="text-[#ececec]">{product.name}</span>
+          </div>
+
+          {/* Admin Live Product Edit Button */}
+          <InlineEditableProduct product={product} buttonOnly />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-24">
@@ -108,7 +115,7 @@ export default function ProductDetailClient({ product }: { product: ProductProps
           <div className="space-y-4">
             <div className="relative aspect-[3/4] w-full border border-[#1f1f1f] bg-[#111111] overflow-hidden group">
               <Image 
-                src={product.images[selectedImage] || "/images/placeholder.jpg"} 
+                src={getAssetUrl(product.images[selectedImage] || "/images/placeholder.jpg")} 
                 alt={product.name} 
                 fill 
                 className="object-cover transition-all duration-300"
@@ -158,7 +165,7 @@ export default function ProductDetailClient({ product }: { product: ProductProps
               {product.name}
             </h1>
             
-            {/* TAMPILAN HARGA USD (SUDAH DIUBAH) */}
+            {/* PRODUCT PRICE IN USD */}
             <p className="text-[#ececec] font-mono text-xl md:text-2xl mb-8">
               ${product.price.toFixed(2)} USD
             </p>
@@ -198,39 +205,22 @@ export default function ProductDetailClient({ product }: { product: ProductProps
             )}
 
             {/* Actions */}
-            <div className="flex flex-col space-y-4">
-              <button 
+            <div className="space-y-4">
+              <button
                 onClick={handleAddToCart}
                 disabled={!product.inStock}
-                className={cn(
-                  "w-full py-5 border text-xs uppercase tracking-widest font-bold transition-all cursor-pointer",
-                  product.inStock 
-                    ? "border-[#1f1f1f] text-[#ececec] hover:bg-[#1f1f1f]" 
-                    : "border-[#1f1f1f]/30 text-[#ececec]/30 cursor-not-allowed"
-                )}
+                className="w-full bg-[#ececec] text-[#050505] py-5 uppercase tracking-widest text-xs font-bold hover:bg-white transition-colors cursor-pointer disabled:opacity-50"
               >
-                {product.inStock ? "Add to Cart" : "Out of Stock"}
+                {product.inStock ? "Add to Cart" : "Sold Out"}
               </button>
-
-              <button 
+              
+              <button
                 onClick={handleBuyNow}
                 disabled={!product.inStock}
-                className={cn(
-                  "w-full py-5 text-xs uppercase tracking-widest font-bold transition-all cursor-pointer",
-                  product.inStock 
-                    ? "bg-[#ececec] text-[#050505] hover:bg-white" 
-                    : "bg-[#1f1f1f] text-[#050505]/30 cursor-not-allowed"
-                )}
+                className="w-full border border-[#1f1f1f] text-[#ececec] py-5 uppercase tracking-widest text-xs font-bold hover:bg-[#111111] transition-colors cursor-pointer disabled:opacity-50"
               >
-                Buy Now
+                Buy It Now
               </button>
-            </div>
-            
-            {/* Shipping Info (SUDAH DIUBAH KE USD/INTERNATIONAL) */}
-            <div className="mt-8 text-xs text-[#ececec]/40 uppercase tracking-widest leading-loose">
-              <p>• Worldwide shipping available. Rates calculated at checkout.</p>
-              <p>• Returns accepted within 14 days of delivery.</p>
-              <p>• Ships within 24-48 hours via express courier.</p>
             </div>
           </div>
         </div>

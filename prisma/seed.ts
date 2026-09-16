@@ -17,7 +17,7 @@ async function main() {
         description: "Heavyweight cotton fleece oversized hoodie with custom screenprinted brutalist art.",
         price: 450000,
         stock: 15,
-        images: ["/images/products/hoodie-1.jpg"],
+        images: ["https://xcorxezfhjmncyxegrvi.supabase.co/storage/v1/object/public/site-assets/mantra-kv-final-1.webp"],
       },
       {
         name: "MANTRA - T-SHIRT OPUS ARCANUM",
@@ -25,7 +25,7 @@ async function main() {
         description: "100% Cotton combed 24s. Boxy fit aesthetic with high-density graphics.",
         price: 250000,
         stock: 20,
-        images: ["/images/products/tshirt-1.jpg"],
+        images: ["https://xcorxezfhjmncyxegrvi.supabase.co/storage/v1/object/public/site-assets/rectangle-26.webp"],
       },
       {
         name: "MANTRA - CAP VOID SHADOW",
@@ -33,7 +33,7 @@ async function main() {
         description: "Unstructured 6-panel strapback cap with front embroidery.",
         price: 180000,
         stock: 10,
-        images: ["/images/products/cap-1.jpg"],
+        images: ["https://xcorxezfhjmncyxegrvi.supabase.co/storage/v1/object/public/site-assets/rectangle-28.webp"],
       },
       {
         name: "MANTRA - ARCANUM JACKET VOL 1",
@@ -41,7 +41,7 @@ async function main() {
         description: "Heavyweight utility jacket with industrial hardware and brutalist typography.",
         price: 650000,
         stock: 12,
-        images: ["/images/products/jacket-1.jpg"],
+        images: ["https://xcorxezfhjmncyxegrvi.supabase.co/storage/v1/object/public/site-assets/rectangle-29.webp"],
       },
     ],
   });

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { getAssetUrl } from "@/lib/assetUrls";
 
 export default function AboutPage() {
   return (
@@ -25,7 +26,7 @@ export default function AboutPage() {
           
           {/* Layer 1: Gambar Mata */}
             <Image
-                src="/images/pexels-wendelmoretti-1925630(background mata untuk jam).png"
+                src={getAssetUrl("/images/pexels-wendelmoretti-1925630(background mata untuk jam).png")}
                 alt="Mantra Eye"
                 fill
                 className="object-cover object-[center_25%] grayscale opacity-80 "
@@ -36,7 +37,7 @@ export default function AboutPage() {
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="relative w-[55%] sm:w-[40%] md:w-[32%] aspect-square">
               <Image
-                src="/images/MASK.png"
+                src={getAssetUrl("/images/MASK.png")}
                 alt="Mantra Clock Overlay"
                 fill
                 className="object-contain mix-blend-screen opacity-45 contrast-125 scale-250 translate-y-10"

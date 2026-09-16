@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
+import { getSiteSetting } from "@/lib/siteSettings";
 import CheckoutClient from "./CheckoutClient";
 
 export default async function CheckoutPage() {
@@ -22,5 +23,7 @@ export default async function CheckoutPage() {
     },
   });
 
-  return <CheckoutClient user={user} />;
+  const whatsappNumber = await getSiteSetting("admin_whatsapp");
+
+  return <CheckoutClient user={user} whatsappNumber={whatsappNumber} />;
 }

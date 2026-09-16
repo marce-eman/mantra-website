@@ -1,15 +1,27 @@
 import React from "react";
+import type { Metadata } from "next";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getSiteSettings } from "@/lib/siteSettings";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartDrawer from "@/components/CartDrawer";
 import FloatingChat from "@/components/FloatingChat";
 import { Providers } from "@/components/Providers";
-import { StoreNavbarWrapper, StoreBottomWrapper } from "@/components/StoreUIWrapper"; // <--- Import file baru
+import { StoreNavbarWrapper, StoreBottomWrapper } from "@/components/StoreUIWrapper";
 import "./globals.css";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "MANTRA — A Manifestation Born From The Shadows",
+  description: "Crafted for those who walk through the void and seek truth within the dark.",
+  icons: {
+    icon: "/images/ICON CHROME 1.png",
+    shortcut: "/images/ICON CHROME 1.png",
+    apple: "/images/ICON CHROME 1.png",
+  },
+};
 
 export default async function RootLayout({
   children,
@@ -17,6 +29,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const session = await auth();
+  const siteSettings = await getSiteSettings();
   
   let isAdmin = false;
   let hasOrders = false;
@@ -55,8 +68,8 @@ export default async function RootLayout({
           {/* BUNGKUS ELEMEN BAWAH DENGAN WRAPPER */}
           <StoreBottomWrapper show={isStoreOpen}>
             <CartDrawer />
-            <FloatingChat />
-            <Footer />
+            <FloatingChat whatsappNumber={siteSettings.admin_whatsapp} />
+            <Footer settings={siteSettings} />
           </StoreBottomWrapper>
 
         </Providers>

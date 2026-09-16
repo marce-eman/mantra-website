@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowLeft, CreditCard, ShoppingBag, Truck } from "lucide-react";
+import { getSiteSetting } from "@/lib/siteSettings";
 
 export default async function OrderDetailPage({
   params,
@@ -16,6 +17,8 @@ export default async function OrderDetailPage({
   if (!session?.user?.id) {
     redirect("/login");
   }
+
+  const whatsappNumber = await getSiteSetting("admin_whatsapp");
 
   const order = await prisma.order.findUnique({
     where: {
@@ -173,7 +176,7 @@ export default async function OrderDetailPage({
             Public Tracking Page
           </Link>
           <a
-            href={`https://wa.me/6281234567890?text=${waText}`}
+            href={`https://wa.me/${whatsappNumber || "6281234567890"}?text=${waText}`}
             target="_blank"
             rel="noopener noreferrer"
             className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-black text-center px-5 py-3 rounded-lg text-xs uppercase tracking-widest font-bold transition-colors cursor-pointer"
