@@ -39,6 +39,11 @@ export default function AdminOrdersPage() {
   };
 
   const handleUpdate = async (id: string, currentData: any) => {
+    if (currentData.status === "SHIPPED" && !currentData.trackingNumber?.trim()) {
+      showToast("Peringatan: Harap isi nomor resi saat status SHIPPED.", "error");
+      return;
+    }
+
     setSavingId(id);
     try {
       const res = await fetch("/api/admin/orders", {
@@ -285,13 +290,31 @@ export default function AdminOrdersPage() {
 
                     {/* Tracking Number Input */}
                     <td className="p-4">
-                      <input
-                        type="text"
-                        placeholder="Receipt / Resi..."
-                        value={ord.trackingNumber || ""}
-                        onChange={(e) => handleInputChange(ord.id, "trackingNumber", e.target.value)}
-                        className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-lg px-3 py-1.5 text-xs text-[#ececec] w-36 font-mono focus:outline-none focus:border-emerald-500/50 uppercase"
-                      />
+                      {ord.status === "SHIPPED" || ord.status === "COMPLETED" ? (
+                        <div className="space-y-1">
+                          <input
+                            type="text"
+                            placeholder="Input No. Resi..."
+                            value={ord.trackingNumber || ""}
+                            onChange={(e) => handleInputChange(ord.id, "trackingNumber", e.target.value)}
+                            className="bg-[#0a0a0a] border border-emerald-500/50 rounded-lg px-3 py-1.5 text-xs text-[#ececec] w-40 font-mono focus:outline-none focus:border-emerald-400 uppercase placeholder:normal-case placeholder:text-zinc-600"
+                          />
+                          {!ord.trackingNumber && ord.status === "SHIPPED" && (
+                            <span className="text-[9px] font-mono text-amber-400 block">
+                              * Resi diperlukan
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <div
+                          className="bg-[#0a0a0a]/50 border border-[#1a1a1a] rounded-lg px-3 py-1.5 text-xs text-zinc-600 w-40 font-mono flex items-center justify-between cursor-not-allowed select-none"
+                          title="Nomor resi hanya dapat diisi saat status pesanan SHIPPED atau COMPLETED"
+                        >
+                          <span className="text-[10px] text-zinc-500 truncate">
+                            {ord.trackingNumber ? ord.trackingNumber : "Hanya saat SHIPPED"}
+                          </span>
+                        </div>
+                      )}
                     </td>
 
                     {/* Action Buttons */}
