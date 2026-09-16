@@ -75,6 +75,7 @@ model Product {
   description    String     @db.Text
   price          Float      // DIUBAH KE FLOAT UNTUK HARGA USD ($)
   stock          Int        @default(0)
+  weight         Int        @default(500) // Berat dalam gram untuk kalkulasi Biteship
   images         String[]
   sizes          String[]   @default([])
 
@@ -133,11 +134,16 @@ model Order {
   phone           String
   address         String      @db.Text
   
-  totalAmount     Float       // USD
+  totalAmount     Float       // USD / IDR Grand Total
   
   status          OrderStatus @default(PENDING)
   courier         String?     // Contoh: JNE, J&T, dll
+  shippingCourier String?     // Nama Kurir Biteship (e.g. JNE, SICEPAT)
+  shippingService String?     // Layanan Kurir (e.g. REG, BEST)
+  shippingCost    Int         @default(0) // Ongkos Kirim
   trackingNumber  String?     // Nomor Resi
+  snapToken       String?     // Token Midtrans Snap
+  paymentStatus   String      @default("PENDING") // PENDING, PAID, EXPIRED, CANCELLED
   
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt

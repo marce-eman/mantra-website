@@ -3,8 +3,8 @@ import Image from "next/image";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { CheckCircle2, ArrowRight, ShoppingBag, Truck, MessageCircle } from "lucide-react";
-import CopyOrderButton from "@/components/CopyOrderButton"; // <--- Import tombol Copy kita
+import { CheckCircle2, ArrowRight, ShoppingBag, Truck, CreditCard, MessageCircle, Clock } from "lucide-react";
+import CopyOrderButton from "@/components/CopyOrderButton";
 import { getSiteSetting } from "@/lib/siteSettings";
 import { getAssetUrl } from "@/lib/assetUrls";
 
@@ -44,9 +44,10 @@ export default async function OrderSuccessPage({
 
   const whatsappNumber = await getSiteSetting("admin_whatsapp");
   const finalOrderId = order.orderNumber || order.id.toUpperCase();
+  const isPaid = order.paymentStatus === "PAID" || order.status === "PAID";
 
   const waText = encodeURIComponent(
-    `Hello Admin MANTRA, I have placed an order.\n\nOrder ID: #${finalOrderId}\nTotal Items Amount: $${order.totalAmount.toFixed(2)} USD.\n\nI am awaiting the final shipping calculation and payment instructions.`
+    `Hello Admin MANTRA, I have placed an order #${finalOrderId}.\nTotal: Rp ${Math.round(order.totalAmount).toLocaleString("id-ID")}\nPayment Status: ${order.paymentStatus}\nCourier: ${order.shippingCourier || order.courier || "Courier"}`
   );
 
   return (
@@ -58,62 +59,69 @@ export default async function OrderSuccessPage({
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-60" />
           
           <div className="inline-flex items-center justify-center w-14 h-14 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-emerald-400">
-            <CheckCircle2 className="w-8 h-8" />
+            {isPaid ? <CheckCircle2 className="w-8 h-8" /> : <Clock className="w-8 h-8" />}
           </div>
 
           <div>
-            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#ececec]/50 block mb-1">
-              STATUS: {order.status}
-            </span>
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#ececec]/50">
+                PAYMENT:
+              </span>
+              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded ${
+                isPaid ? "bg-emerald-950 text-emerald-400 border border-emerald-800" : "bg-amber-950 text-amber-400 border border-amber-800"
+              }`}>
+                {order.paymentStatus}
+              </span>
+            </div>
             <h1 className="text-2xl md:text-4xl font-light tracking-widest uppercase">
-              ORDER SECURED
+              {isPaid ? "ORDER CONFIRMED" : "ORDER RECEIVED"}
             </h1>
             <p className="text-xs text-[#ececec]/60 uppercase tracking-widest mt-1">
-              Your journey into the void has begun.
+              {isPaid ? "Your payment was successfully verified by Midtrans." : "Awaiting payment settlement from Midtrans."}
             </p>
           </div>
 
           <div className="pt-2 border-t border-[#1f1f1f] mt-4 max-w-sm mx-auto">
-            <span className="text-[10px] font-mono text-[#ececec]/40 uppercase tracking-widest block mt-4 mb-2">ORDER REFERENCE</span>
+            <span className="text-[10px] font-mono text-[#ececec]/40 uppercase tracking-widest block mt-4 mb-2">
+              ORDER REFERENCE
+            </span>
             <span className="text-base md:text-xl font-mono font-bold text-emerald-400 tracking-wider">
               #{finalOrderId}
             </span>
             
-            {/* TOMBOL COPY MUNCUL DI SINI */}
             <CopyOrderButton textToCopy={finalOrderId} />
-            
           </div>
         </div>
 
-        {/* Instruksi Lanjutan via WhatsApp */}
-        <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl p-6 md:p-8 space-y-6 text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-zinc-900 rounded-full mb-2">
-            <MessageCircle className="w-6 h-6 text-white" />
-          </div>
-          <h2 className="text-lg font-bold uppercase tracking-widest">NEXT STEP: CONFIRM VIA WHATSAPP</h2>
-          
-          <div className="flex justify-between items-center max-w-sm mx-auto text-sm border-b border-[#1f1f1f] pb-4">
-            <span className="text-[#ececec]/60 uppercase tracking-widest">Items Subtotal</span>
-            <span className="font-mono font-bold text-emerald-400">
-              ${order.totalAmount.toFixed(2)} USD
-            </span>
-          </div>
+        {/* Shipping & Payment Summary Card */}
+        <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl p-6 md:p-8 space-y-4">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-[#ececec]/60 border-b border-[#1f1f1f] pb-3 flex items-center gap-2">
+            <CreditCard className="w-4 h-4 text-emerald-400" /> Transaction Summary
+          </h2>
 
-          <p className="text-xs text-[#ececec]/50 font-light leading-relaxed max-w-lg mx-auto">
-            Your order has been recorded in our system. Please contact our Admin via WhatsApp to get the exact shipping cost to your location and the final payment instructions.
-          </p>
-
-          <a
-            href={`https://wa.me/${whatsappNumber || "6281234567890"}?text=${waText}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block w-full max-w-sm mx-auto bg-emerald-500 hover:bg-emerald-400 text-[#050505] text-center py-4 rounded-xl text-xs uppercase tracking-widest font-bold transition-colors cursor-pointer"
-          >
-            Chat Admin for Payment
-          </a>
+          <div className="space-y-2 text-xs font-mono">
+            <div className="flex justify-between text-[#ececec]/70">
+              <span>Courier (Biteship):</span>
+              <span className="text-white font-bold uppercase">{order.shippingCourier || order.courier || "Standard Courier"}</span>
+            </div>
+            {order.shippingService && (
+              <div className="flex justify-between text-[#ececec]/50">
+                <span>Service:</span>
+                <span>{order.shippingService}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-[#ececec]/70">
+              <span>Shipping Fee:</span>
+              <span>Rp {Number(order.shippingCost || 0).toLocaleString("id-ID")}</span>
+            </div>
+            <div className="flex justify-between text-[#ececec] border-t border-[#1f1f1f] pt-2 text-sm font-bold">
+              <span>Grand Total:</span>
+              <span className="text-emerald-400">Rp {Math.round(order.totalAmount).toLocaleString("id-ID")}</span>
+            </div>
+          </div>
         </div>
 
-        {/* Ringkasan Item & Alamat Pengiriman */}
+        {/* Ordered Items & Destination */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="bg-[#0a0a0a] border border-[#1f1f1f] rounded-2xl p-6 space-y-4">
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#ececec]/50 border-b border-[#1f1f1f] pb-3">
@@ -135,9 +143,9 @@ export default async function OrderSuccessPage({
                       <Image src={productImage} alt={(product?.name as string) || "Product"} fill className="object-cover" />
                     </div>
                     <div className="flex-grow">
-                      <p className="font-medium uppercase line-clamp-1">{(product?.name as string) || "Item"}</p>
+                      <p className="font-medium uppercase line-clamp-1">{(product?.name as string) || item.name}</p>
                       <p className="text-[10px] text-[#ececec]/50 font-mono">
-                        {item.quantity} x ${item.price.toFixed(2)}
+                        {item.quantity} x Rp {Math.round(item.price).toLocaleString("id-ID")}
                       </p>
                     </div>
                   </div>
@@ -150,10 +158,28 @@ export default async function OrderSuccessPage({
             <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#ececec]/50 border-b border-[#1f1f1f] pb-3">
               <Truck className="w-4 h-4" /> Destination Address
             </div>
-            <p className="text-xs text-[#ececec]/70 leading-relaxed font-light">
+            <p className="text-xs text-[#ececec]/70 leading-relaxed font-light font-mono">
               {order.address || "No address specified"}
             </p>
+            {order.trackingNumber && (
+              <div className="mt-3 p-2 bg-[#141414] border border-[#2a2a2a] rounded-lg text-xs font-mono">
+                <span className="text-[#ececec]/40 block text-[10px] uppercase">Tracking Number:</span>
+                <span className="text-emerald-400 font-bold">{order.trackingNumber}</span>
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* WhatsApp Support Option */}
+        <div className="text-center pt-2">
+          <a
+            href={`https://wa.me/${whatsappNumber || "6281234567890"}?text=${waText}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-xs text-[#ececec]/50 hover:text-white transition-colors"
+          >
+            <MessageCircle className="w-3.5 h-3.5" /> Have questions? Contact Admin Support on WhatsApp
+          </a>
         </div>
 
         {/* Bottom Action Buttons */}

@@ -190,7 +190,7 @@ export default function TrackOrderPage() {
                 <span className="text-[#ececec]/50 uppercase tracking-widest flex items-center gap-2">
                   <Package className="w-3.5 h-3.5" /> Courier
                 </span>
-                <span className="uppercase font-bold text-[#ececec]">{result.courier || "Pending"}</span>
+                <span className="uppercase font-bold text-[#ececec]">{result.shippingCourier ? `${result.shippingCourier} ${result.shippingService ? `(${result.shippingService})` : ""}` : (result.courier || "Pending")}</span>
               </div>
               
               <div className="flex justify-between items-center">

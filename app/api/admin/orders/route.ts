@@ -49,7 +49,16 @@ export async function PATCH(req: Request) {
     if (authError) return authError; // Cegat di sini
 
     const body = await req.json();
-    const { id, status, courier, trackingNumber } = body;
+    const {
+      id,
+      status,
+      courier,
+      shippingCourier,
+      shippingService,
+      shippingCost,
+      paymentStatus,
+      trackingNumber,
+    } = body;
 
     if (!id) {
       return NextResponse.json({ message: "Order ID is required" }, { status: 400 });
@@ -73,7 +82,7 @@ export async function PATCH(req: Request) {
           });
         }
       } 
-      else if (currentOrder.status === "CANCELED" && status !== "CANCELED") {
+      else if (currentOrder.status === "CANCELED" && status && status !== "CANCELED") {
          for (const item of currentOrder.items) {
           await tx.product.update({
             where: { id: item.productId },
@@ -82,13 +91,18 @@ export async function PATCH(req: Request) {
         }
       }
 
+      const updateData: Record<string, any> = {};
+      if (status !== undefined) updateData.status = status;
+      if (courier !== undefined) updateData.courier = courier;
+      if (shippingCourier !== undefined) updateData.shippingCourier = shippingCourier;
+      if (shippingService !== undefined) updateData.shippingService = shippingService;
+      if (shippingCost !== undefined) updateData.shippingCost = Number(shippingCost);
+      if (paymentStatus !== undefined) updateData.paymentStatus = paymentStatus;
+      if (trackingNumber !== undefined) updateData.trackingNumber = trackingNumber;
+
       const updatedOrder = await tx.order.update({
         where: { id },
-        data: {
-          status,
-          courier,
-          trackingNumber,
-        },
+        data: updateData,
       });
 
       return updatedOrder;

@@ -18,8 +18,13 @@ export async function GET(req: Request) {
         orderNumber: true,
         recipientName: true,
         status: true,
+        paymentStatus: true,
         courier: true,
+        shippingCourier: true,
+        shippingService: true,
+        shippingCost: true,
         trackingNumber: true,
+        totalAmount: true,
       },
     });
 
