@@ -1,9 +1,12 @@
 import { prisma } from "@/lib/prisma";
 import ProductCard from "@/components/ProductCard";
 
+export const revalidate = 60;
+
 export default async function ShopPage() {
-  // 1. Ambil semua episode berurutan, beserta produk di dalamnya
+  // 1. Ambil semua episode aktif berurutan, beserta produk di dalamnya
   const episodes = await prisma.episode.findMany({
+    where: { isActive: true },
     orderBy: { createdAt: "asc" },
     include: {
       articles: {

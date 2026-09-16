@@ -47,7 +47,8 @@ export async function saveEpisodeAction(data: any) {
     }
 
     revalidatePath("/admin/episodes");
-    revalidatePath("/"); 
+    revalidatePath("/");
+    revalidatePath("/shop");
     return { success: true };
   } catch (error) {
     console.error("Gagal menyimpan episode:", error);
@@ -76,6 +77,7 @@ export async function deleteEpisodeAction(id: string) {
     
     revalidatePath("/admin/episodes");
     revalidatePath("/");
+    revalidatePath("/shop");
     return { success: true };
   } catch (error) {
     console.error("Gagal menghapus episode:", error);

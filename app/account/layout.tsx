@@ -3,29 +3,17 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { User, Package, MapPin, ArrowLeft, Shield } from "lucide-react";
 import SignOutButton from "./SignOutButton";
-import { prisma } from "@/lib/prisma";
+import { getCachedUserProfile } from "@/lib/userProfile";
 
 export default async function AccountLayout({ children }: { children: React.ReactNode; }) {
   const session = await auth();
-
-  // 👇 TAMBAHKAN BARIS INI UNTUK DEBUGGING
-  console.log("=== DEBUG SESSION LAYOUT ===", JSON.stringify(session, null, 2));
 
   if (!session?.user?.id) {
     redirect("/login?redirect=/account/orders");
   }
 
-  // Ambil data user sekaligus menghitung total pesanannya di database
-  const dbUser = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    include: {
-      _count: {
-        select: { orders: true }
-      }
-    }
-  });
-
-  console.log("=== DEBUG DB USER LAYOUT ===", dbUser);
+  // Ambil data user dari cached request handler
+  const dbUser = await getCachedUserProfile(session.user.id);
   
   const isAdmin = dbUser?.role === "ADMIN";
   const hasOrders = (dbUser?._count?.orders ?? 0) > 0;

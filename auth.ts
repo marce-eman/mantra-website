@@ -82,18 +82,23 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       // 1. Tangkap data saat pertama kali login
       if (user) {
         token.id = user.id;
+        token.role = (user as any).role || "CUSTOMER";
       }
       
-      // 2. MENCEGAH BUG NEXTAUTH: Fallback jika token.id kosong menggunakan token.sub
+      // 2. Fallback jika token.id kosong menggunakan token.sub
       const currentId = token.id || token.sub;
-      
-      // 3. TARIK DATA TERBARU DARI DATABASE
       if (currentId) {
         token.id = currentId;
+      }
+
+      // 3. Perbarui role jika trigger update atau role belum ada di token
+      if (trigger === "update" && session?.role) {
+        token.role = session.role;
+      } else if (!token.role && currentId) {
         try {
           const dbUser = await prisma.user.findUnique({ 
             where: { id: currentId as string },

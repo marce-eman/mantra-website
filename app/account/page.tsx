@@ -2,17 +2,16 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { getCachedUserProfile } from "@/lib/userProfile";
 
 export default async function AccountPage() {
   const session = await auth();
 
-  if (!session?.user?.email) {
+  if (!session?.user?.id && !session?.user?.email) {
     redirect("/login");
   }
 
-  const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
-  });
+  const user = await getCachedUserProfile(session?.user?.id || session?.user?.email || "");
 
   async function updateWhatsApp(formData: FormData) {
     "use server";

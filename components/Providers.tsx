@@ -14,7 +14,7 @@ interface ProvidersProps {
 
 export function Providers({ children, isFriday, isAdmin, hasOrders }: ProvidersProps) {
   return (
-    <SessionProvider>
+    <SessionProvider refetchInterval={0} refetchOnWindowFocus={false}>
       <SatpamGaib isFriday={isFriday} isAdmin={isAdmin} hasOrders={hasOrders}>
         <InlineEditProvider>
           {children}
