@@ -12,23 +12,27 @@ import { formatRupiah } from "@/lib/utils";
 export default async function OrderSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ orderId?: string }>;
+  searchParams: Promise<{ orderId?: string; order_id?: string }>;
 }) {
   const session = await auth();
-  const { orderId } = await searchParams;
+  const search = await searchParams;
+  const targetOrderId = search?.order_id || search?.orderId;
 
   if (!session?.user?.id) {
     redirect("/login");
   }
 
-  if (!orderId) {
+  if (!targetOrderId) {
     redirect("/shop");
   }
 
-  const order = await prisma.order.findUnique({
+  const order = await prisma.order.findFirst({
     where: {
-      id: orderId,
       userId: session.user.id,
+      OR: [
+        { id: targetOrderId },
+        { orderNumber: targetOrderId },
+      ],
     },
     include: {
       items: {

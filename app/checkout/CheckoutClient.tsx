@@ -184,20 +184,20 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
           onSuccess: (result: any) => {
             console.log("Midtrans payment success:", result);
             clearCart();
-            router.push(`/order-success?orderId=${orderId}`);
+            router.push(`/order-received?order_id=${orderId}`);
           },
           onPending: (result: any) => {
             console.log("Midtrans payment pending:", result);
             clearCart();
-            router.push(`/order-success?orderId=${orderId}`);
+            router.push(`/account/orders?status=pending`);
           },
           onError: (result: any) => {
             console.error("Midtrans payment error:", result);
-            setErrorMsg("Payment failed or was declined. Please try again or select another payment method.");
+            setErrorMsg("Pembayaran gagal atau ditolak. Silakan coba lagi.");
             setIsSubmitting(false);
           },
           onClose: () => {
-            setErrorMsg("Payment popup was closed without completing the transaction. You can try paying again whenever ready.");
+            setErrorMsg("Pembayaran belum diselesaikan. Silakan selesaikan pembayaran Anda.");
             setIsSubmitting(false);
           },
         });
