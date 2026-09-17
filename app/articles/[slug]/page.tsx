@@ -29,7 +29,7 @@ export default async function EpisodePage({ params }: { params: Promise<{ slug: 
     orderBy: { createdAt: "asc" },
     include: {
       articles: {
-        orderBy: { createdAt: "asc" },
+        orderBy: [{ articleNo: "asc" }, { createdAt: "asc" }],
       },
     },
   });

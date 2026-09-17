@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, XCircle } from "lucide-react";
@@ -12,14 +12,27 @@ import {
 import { getAssetUrl } from "@/lib/assetUrls";
 
 // --- KOMPONEN BANTUAN UNTUK KARTU GRID (EPISODE GENAP) ---
-const GridCard = ({ item, aspect }: { item: any; aspect: string }) => {
+const GridCard = ({
+  item,
+  aspect,
+  isFocused = false,
+}: {
+  item: any;
+  aspect: string;
+  isFocused?: boolean;
+}) => {
   const isRealItem = Boolean(item?.id && !item.id.match(/^\d+$/));
 
   return (
-    <div className="relative group">
+    <div
+      data-article-card={item.id}
+      className="relative group transition-all duration-300 ease-out"
+    >
       <Link
         href={`/articles/${item.slug}`}
-        className={`relative overflow-hidden rounded-2xl border border-transparent hover:border-[#1f1f1f] group ${aspect} bg-black/30 block cursor-pointer transition-all duration-500 hover:-translate-y-2`}
+        className={`relative overflow-hidden rounded-2xl border border-transparent hover:border-[#1f1f1f] group ${aspect} bg-black/30 block cursor-pointer transition-all duration-500 hover:-translate-y-2 ${
+          isFocused ? "shadow-[0_0_35px_rgba(0,0,0,0.9)]" : ""
+        }`}
       >
         {isRealItem ? (
           <InlineEditableImage
@@ -29,12 +42,15 @@ const GridCard = ({ item, aspect }: { item: any; aspect: string }) => {
             label="Article Thumbnail"
             value={item.image}
             className="w-full h-full"
+            isFocused={isFocused}
           >
             <Image
               src={item.image}
               alt={item.title}
               fill
-              className="object-cover grayscale opacity-75 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 rounded-2xl"
+              className={`object-cover transition-all duration-500 rounded-2xl ${
+                isFocused ? "grayscale-0 opacity-100" : "grayscale opacity-75"
+              } md:grayscale md:opacity-75 md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-105`}
             />
           </InlineEditableImage>
         ) : (
@@ -42,13 +58,28 @@ const GridCard = ({ item, aspect }: { item: any; aspect: string }) => {
             src={item.image}
             alt={item.title}
             fill
-            className="object-cover grayscale opacity-75 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 rounded-2xl"
+            className={`object-cover transition-all duration-500 rounded-2xl ${
+              isFocused ? "grayscale-0 opacity-100" : "grayscale opacity-75"
+            } md:grayscale md:opacity-75 md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-105`}
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl z-10 pointer-events-none" />
 
-        <div className="absolute bottom-6 left-4 right-4 translate-y-4 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 z-20">
-          <div className="bg-black/80 backdrop-blur-md border border-[#1f1f1f] p-4 md:p-5 rounded-xl shadow-xl">
+        {/* Soft Dark Gradient: Visible when isFocused on mobile, Hover on desktop */}
+        <div
+          className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity duration-300 rounded-2xl z-10 pointer-events-none ${
+            isFocused ? "opacity-100" : "opacity-0"
+          } md:opacity-0 md:group-hover:opacity-100`}
+        />
+
+        {/* Dynamic Center Viewport Title Box: Slides up & visible on focused card in mobile, Hover on desktop */}
+        <div
+          className={`absolute bottom-4 left-3 right-3 sm:bottom-6 sm:left-4 sm:right-4 transition-all duration-300 ease-out z-20 ${
+            isFocused
+              ? "opacity-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 translate-y-4 pointer-events-none"
+          } md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto`}
+        >
+          <div className="bg-black/85 backdrop-blur-md border border-[#1f1f1f] p-3.5 sm:p-4 md:p-5 rounded-xl shadow-xl pointer-events-auto">
             <div className="text-[#ececec]/60 text-[9px] uppercase tracking-widest mb-1">
               <span className="text-[#ececec] font-bold mr-1">+</span>
               {isRealItem ? (
@@ -67,7 +98,7 @@ const GridCard = ({ item, aspect }: { item: any; aspect: string }) => {
               )}
             </div>
 
-            <h3 className="text-[#ececec] text-sm md:text-lg font-light tracking-wide mb-2 md:mb-3 truncate">
+            <h3 className="text-[#ececec] text-sm md:text-lg font-light tracking-wide mb-1.5 md:mb-3 truncate">
               {isRealItem ? (
                 <InlineEditableText
                   type="article"
@@ -96,6 +127,9 @@ const GridCard = ({ item, aspect }: { item: any; aspect: string }) => {
 // --- KOMPONEN UTAMA SETIAP EPISODE ---
 function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
   const carouselRef = useRef<HTMLDivElement>(null);
+  const evenGridRef = useRef<HTMLDivElement>(null);
+  const [activeSlideIdx, setActiveSlideIdx] = useState<number>(0);
+  const [activeGridCardId, setActiveGridCardId] = useState<string | null>(null);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const isRealEpisode = Boolean(episode?.id);
 
@@ -125,7 +159,7 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
     { id: "4", slug: "4", image: getAssetUrl("/images/Group 381.jpeg"), title: "Arcanum Jacket", articleNo: "004" },
   ];
 
-  const episodeItems =
+  const rawItems =
     episode.articles && episode.articles.length > 0
       ? episode.articles.map((art: any, idx: number) => ({
           id: art.id,
@@ -136,7 +170,108 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
         }))
       : defaultItems;
 
+  const episodeItems = [...rawItems].sort((a, b) =>
+    (a.articleNo || "").localeCompare(b.articleNo || "", undefined, { numeric: true })
+  );
+
   const isEvenEpisode = index % 2 !== 0;
+
+  // Active slide detection on mobile based on center alignment (Odd episodes carousel)
+  const updateActiveSlide = useCallback(() => {
+    if (!carouselRef.current) return;
+    const container = carouselRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.left + containerRect.width / 2;
+
+    const children = Array.from(container.children) as HTMLElement[];
+    if (children.length === 0) return;
+
+    let closestIdx = 0;
+    let minDistance = Infinity;
+
+    children.forEach((child, idx) => {
+      const rect = child.getBoundingClientRect();
+      const childCenter = rect.left + rect.width / 2;
+      const distance = Math.abs(containerCenter - childCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIdx = idx;
+      }
+    });
+
+    setActiveSlideIdx(closestIdx);
+  }, []);
+
+  // Dynamic Center Viewport Detection for Even Episodes (Vertical Layout on mobile)
+  const updateGridCenterFocus = useCallback(() => {
+    if (!evenGridRef.current) return;
+    const cards = evenGridRef.current.querySelectorAll<HTMLElement>("[data-article-card]");
+    if (cards.length === 0) return;
+
+    const viewportCenterY = window.innerHeight / 2;
+    let closestId: string | null = null;
+    let minDistance = Infinity;
+
+    cards.forEach((card) => {
+      const rect = card.getBoundingClientRect();
+      const cardCenterY = rect.top + rect.height / 2;
+      const distance = Math.abs(viewportCenterY - cardCenterY);
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestId = card.getAttribute("data-article-card");
+      }
+    });
+
+    // If the closest card is reasonably near the center
+    if (minDistance < window.innerHeight * 0.45) {
+      setActiveGridCardId(closestId);
+    } else {
+      setActiveGridCardId(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    updateActiveSlide();
+    const container = carouselRef.current;
+    if (!container) return;
+
+    let rafId: number;
+    const handleScrollRaf = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateActiveSlide);
+    };
+
+    container.addEventListener("scroll", handleScrollRaf, { passive: true });
+    window.addEventListener("resize", handleScrollRaf, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      container.removeEventListener("scroll", handleScrollRaf);
+      window.removeEventListener("resize", handleScrollRaf);
+    };
+  }, [updateActiveSlide, episodeItems]);
+
+  useEffect(() => {
+    if (!isEvenEpisode) return;
+
+    updateGridCenterFocus();
+
+    let rafId: number;
+    const handleScrollRaf = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateGridCenterFocus);
+    };
+
+    window.addEventListener("scroll", handleScrollRaf, { passive: true });
+    window.addEventListener("resize", handleScrollRaf, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", handleScrollRaf);
+      window.removeEventListener("resize", handleScrollRaf);
+    };
+  }, [isEvenEpisode, updateGridCenterFocus, episodeItems]);
 
   // Video Modal
   const VideoModal = () =>
@@ -326,17 +461,46 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
+            <div ref={evenGridRef} className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
               {(episodeItems[0] || episodeItems[1]) && (
                 <div className="flex flex-col gap-6">
-                  {episodeItems[0] && <GridCard item={episodeItems[0]} aspect="aspect-[4/3]" />}
-                  {episodeItems[1] && <GridCard item={episodeItems[1]} aspect="aspect-[4/3]" />}
+                  {episodeItems[0] && (
+                    <GridCard
+                      item={episodeItems[0]}
+                      aspect="aspect-[4/3]"
+                      isFocused={activeGridCardId === episodeItems[0].id}
+                    />
+                  )}
+                  {episodeItems[1] && (
+                    <GridCard
+                      item={episodeItems[1]}
+                      aspect="aspect-[4/3]"
+                      isFocused={activeGridCardId === episodeItems[1].id}
+                    />
+                  )}
                 </div>
               )}
-              {episodeItems[2] && <GridCard item={episodeItems[2]} aspect="aspect-[3/4]" />}
-              {episodeItems[3] && <GridCard item={episodeItems[3]} aspect="aspect-[3/4]" />}
+              {episodeItems[2] && (
+                <GridCard
+                  item={episodeItems[2]}
+                  aspect="aspect-[3/4]"
+                  isFocused={activeGridCardId === episodeItems[2].id}
+                />
+              )}
+              {episodeItems[3] && (
+                <GridCard
+                  item={episodeItems[3]}
+                  aspect="aspect-[3/4]"
+                  isFocused={activeGridCardId === episodeItems[3].id}
+                />
+              )}
               {episodeItems.slice(4).map((item: any) => (
-                <GridCard key={item.id} item={item} aspect="aspect-[3/4]" />
+                <GridCard
+                  key={item.id}
+                  item={item}
+                  aspect="aspect-[3/4]"
+                  isFocused={activeGridCardId === item.id}
+                />
               ))}
             </div>
           </div>
@@ -460,8 +624,9 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
           ref={carouselRef}
           className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide pl-16 pr-16 md:pl-24 md:pr-24 space-x-6 pb-8 items-stretch"
         >
-          {episodeItems.map((item: any) => {
+          {episodeItems.map((item: any, idx: number) => {
             const isRealArt = Boolean(item?.id && !item.id.match(/^\d+$/));
+            const isActive = activeSlideIdx === idx;
 
             return (
               <div key={item.id} className="shrink-0 flex items-center gap-4 snap-center group">
@@ -483,7 +648,9 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
 
                 <Link
                   href={`/articles/${item.slug}`}
-                  className="relative w-[260px] h-[360px] md:w-[340px] md:h-[460px] rounded-2xl border border-transparent hover:border-[#1f1f1f] bg-transparent overflow-hidden block transition-all duration-500 hover:-translate-y-3"
+                  className={`relative w-[260px] h-[360px] md:w-[340px] md:h-[460px] rounded-2xl border border-transparent hover:border-[#1f1f1f] bg-transparent overflow-hidden block transition-all duration-500 hover:-translate-y-3 ${
+                    isActive ? "shadow-[0_0_30px_rgba(0,0,0,0.8)]" : ""
+                  }`}
                 >
                   {isRealArt ? (
                     <InlineEditableImage
@@ -498,7 +665,9 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
                         src={item.image}
                         alt={item.title}
                         fill
-                        className="object-cover p-2 transition-all duration-700 group-hover:scale-105 grayscale group-hover:grayscale-0 rounded-2xl"
+                        className={`object-cover p-2 transition-all duration-700 md:group-hover:scale-105 rounded-2xl ${
+                          isActive ? "grayscale-0 opacity-100" : "grayscale opacity-75"
+                        } md:grayscale md:opacity-75 md:group-hover:grayscale-0 md:group-hover:opacity-100`}
                       />
                     </InlineEditableImage>
                   ) : (
@@ -506,17 +675,26 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
                       src={item.image}
                       alt={item.title}
                       fill
-                      className="object-cover p-2 transition-all duration-700 group-hover:scale-105 grayscale group-hover:grayscale-0 rounded-2xl"
+                      className={`object-cover p-2 transition-all duration-700 md:group-hover:scale-105 rounded-2xl ${
+                        isActive ? "grayscale-0 opacity-100" : "grayscale opacity-75"
+                      } md:grayscale md:opacity-75 md:group-hover:grayscale-0 md:group-hover:opacity-100`}
                     />
                   )}
 
-                  <div className="absolute bottom-8 left-4 right-4 translate-y-4 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 z-20 pointer-events-none">
-                    <div className="bg-black/80 backdrop-blur-md border border-[#1f1f1f] p-5 rounded-xl shadow-xl pointer-events-auto">
+                  {/* Active-Slide Auto Title Card Reveal on Mobile / Hover on Desktop */}
+                  <div
+                    className={`absolute bottom-4 left-3 right-3 sm:bottom-8 sm:left-4 sm:right-4 transition-all duration-300 z-20 ${
+                      isActive
+                        ? "opacity-100 translate-y-0 pointer-events-auto"
+                        : "opacity-0 translate-y-4 pointer-events-none"
+                    } md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto`}
+                  >
+                    <div className="bg-black/85 backdrop-blur-md border border-[#1f1f1f] p-4 sm:p-5 rounded-xl shadow-xl pointer-events-auto">
                       <div className="text-[#ececec]/60 text-[9px] uppercase tracking-widest mb-1">
                         <span className="text-[#ececec] font-bold mr-1">+</span>
                         {item.title}
                       </div>
-                      <h3 className="text-[#ececec] text-lg font-light tracking-wide mb-3">
+                      <h3 className="text-[#ececec] text-sm md:text-lg font-light tracking-wide mb-2 md:mb-3 truncate">
                         {isRealArt ? (
                           <InlineEditableText
                             type="article"
@@ -537,7 +715,12 @@ function EpisodeBlock({ episode, index }: { episode: any; index: number }) {
                     </div>
                   </div>
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10 rounded-2xl pointer-events-none" />
+                  {/* Active-Slide Soft Gradient Reveal on Mobile / Hover on Desktop */}
+                  <div
+                    className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent transition-opacity duration-300 z-10 rounded-2xl pointer-events-none ${
+                      isActive ? "opacity-100" : "opacity-0"
+                    } md:opacity-0 md:group-hover:opacity-100`}
+                  />
                 </Link>
               </div>
             );

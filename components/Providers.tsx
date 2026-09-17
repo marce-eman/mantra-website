@@ -3,6 +3,7 @@
 import { SessionProvider } from "next-auth/react";
 import SatpamGaib from "@/components/SatpamGaib";
 import { InlineEditProvider } from "@/components/inline-edit";
+import { CurrencyProvider } from "@/context/CurrencyContext";
 import { ReactNode } from "react";
 
 interface ProvidersProps {
@@ -15,11 +16,13 @@ interface ProvidersProps {
 export function Providers({ children, isFriday, isAdmin, hasOrders }: ProvidersProps) {
   return (
     <SessionProvider refetchInterval={0} refetchOnWindowFocus={false}>
-      <SatpamGaib isFriday={isFriday} isAdmin={isAdmin} hasOrders={hasOrders}>
-        <InlineEditProvider>
-          {children}
-        </InlineEditProvider>
-      </SatpamGaib>
+      <CurrencyProvider>
+        <SatpamGaib isFriday={isFriday} isAdmin={isAdmin} hasOrders={hasOrders}>
+          <InlineEditProvider>
+            {children}
+          </InlineEditProvider>
+        </SatpamGaib>
+      </CurrencyProvider>
     </SessionProvider>
   );
 }

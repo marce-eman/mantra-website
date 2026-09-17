@@ -37,6 +37,8 @@ export function InlineEditableProduct({
 
   const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [name, setName] = useState<string>(product.name || "");
+  const [description, setDescription] = useState<string>(product.description || "");
   const [price, setPrice] = useState<number>(product.price || 0);
   const [stock, setStock] = useState<number>(product.stock || 0);
   const [images, setImages] = useState<string[]>([]);
@@ -59,6 +61,8 @@ export function InlineEditableProduct({
   };
 
   useEffect(() => {
+    setName(product.name || "");
+    setDescription(product.description || "");
     setPrice(product.price || 0);
     setStock(product.stock || 0);
     setImages(parseToArray(product.images));
@@ -67,6 +71,8 @@ export function InlineEditableProduct({
 
   useEffect(() => {
     if (isOpen) {
+      setName(product.name || "");
+      setDescription(product.description || "");
       setPrice(product.price || 0);
       setStock(product.stock || 0);
       setImages(parseToArray(product.images));
@@ -152,11 +158,18 @@ export function InlineEditableProduct({
     e.stopPropagation();
 
     if (isSaving || isUploading) return;
+    if (!name.trim()) {
+      showToast("Product name cannot be empty.", "error");
+      return;
+    }
+
     setIsSaving(true);
 
     try {
       const res = await updateInlineProductAction({
         id: product.id,
+        name: name.trim(),
+        description: description.trim(),
         price: Number(price) || 0,
         stock: Number(stock) || 0,
         images,
@@ -183,7 +196,7 @@ export function InlineEditableProduct({
         <button
           type="button"
           onClick={handleOpen}
-          className={`inline-flex items-center gap-1.5 bg-black/90 hover:bg-pink-600/20 text-pink-400 border border-pink-500/80 px-3 py-1.5 rounded-xl shadow-[0_0_15px_rgba(236,72,153,0.3)] backdrop-blur-md text-[10px] font-mono font-bold tracking-widest uppercase transition-all cursor-pointer ${className}`}
+          className={`inline-flex items-center justify-center gap-1.5 bg-black/90 hover:bg-pink-600/20 text-pink-400 border border-pink-500/80 px-3.5 py-2.5 sm:px-3 sm:py-1.5 min-h-[44px] sm:min-h-0 rounded-xl shadow-[0_0_15px_rgba(236,72,153,0.3)] backdrop-blur-md text-[10px] font-mono font-bold tracking-widest uppercase transition-all cursor-pointer ${className}`}
           title="Edit Product (Photos, Price, Sizes)"
         >
           <Image
@@ -201,11 +214,11 @@ export function InlineEditableProduct({
         >
           {children}
 
-          {/* Brutalist Pink Badge in Top Right Corner */}
+          {/* Brutalist Pink Badge in Top Right Corner (Always visible on mobile, hover on desktop) */}
           <button
             type="button"
             onClick={handleOpen}
-            className="absolute top-3 right-3 z-30 opacity-0 group-hover/product-edit:opacity-100 transition-all duration-200 inline-flex items-center gap-1.5 bg-black/95 hover:bg-pink-600/20 text-pink-400 border border-pink-500/80 px-2.5 py-1 rounded-xl shadow-[0_0_15px_rgba(236,72,153,0.4)] backdrop-blur-md text-[9px] font-mono font-bold tracking-widest uppercase cursor-pointer"
+            className="absolute top-2 right-2 sm:top-3 sm:right-3 z-30 opacity-100 sm:opacity-0 sm:group-hover/product-edit:opacity-100 transition-all duration-200 inline-flex items-center justify-center gap-1.5 bg-black/95 hover:bg-pink-600/20 text-pink-400 border border-pink-500/80 px-3 py-2 sm:px-2.5 sm:py-1 min-h-[44px] sm:min-h-0 rounded-xl shadow-[0_0_15px_rgba(236,72,153,0.4)] backdrop-blur-md text-[9px] font-mono font-bold tracking-widest uppercase cursor-pointer"
           >
             <Image
               src="/images/ICON CHROME 1.png"
@@ -247,7 +260,7 @@ export function InlineEditableProduct({
                         CMS LIVE EDIT
                       </div>
                       <h3 className="text-base font-semibold text-white tracking-wide uppercase">
-                        EDIT // [ {product.name || "PRODUCT"} ]
+                        EDIT // [ {name || product.name || "PRODUCT"} ]
                       </h3>
                     </div>
                   </div>
@@ -264,8 +277,40 @@ export function InlineEditableProduct({
 
                 {/* Form */}
                 <form onSubmit={handleSave} className="space-y-6 text-xs">
-                  {/* 1. Photos Section */}
-                  <div className="space-y-3">
+                  {/* 1. Product Name & Description */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="block text-[11px] uppercase tracking-wider text-[#ececec]/80 font-bold">
+                        PRODUCT NAME *
+                      </label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="e.g. MANTRA - OVERSIZED HOODIE VOL 1"
+                        required
+                        disabled={isSaving}
+                        className="w-full bg-[#111111] border border-[#2a2a2a] focus:border-pink-500 rounded-xl px-4 py-3 text-xs text-[#ececec] font-mono focus:outline-none focus:ring-1 focus:ring-pink-500 transition-all placeholder:text-[#555]"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="block text-[11px] uppercase tracking-wider text-[#ececec]/80 font-bold">
+                        PRODUCT DESCRIPTION
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="Enter product description, materials, fit..."
+                        disabled={isSaving}
+                        className="w-full bg-[#111111] border border-[#2a2a2a] focus:border-pink-500 rounded-xl px-4 py-3 text-xs text-[#ececec] font-mono focus:outline-none focus:ring-1 focus:ring-pink-500 transition-all custom-scrollbar placeholder:text-[#555]"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 2. Photos Section */}
+                  <div className="space-y-3 border-t border-[#1f1f1f] pt-4">
                     <div className="flex items-center justify-between">
                       <label className="block text-[11px] uppercase tracking-wider text-[#ececec]/80 font-bold">
                         PRODUCT PHOTOS ({images.length} ACTIVE)

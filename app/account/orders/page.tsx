@@ -107,20 +107,18 @@ export default async function AccountOrdersPage() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#1f1f1f] pb-4 gap-4">
                   
-                  {/* Bagian Order ID dan Tombol Copy yang Dijejerkan */}
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  {/* Order ID & Date Header */}
+                  <div className="flex items-center gap-2">
                     <div>
-                      <span className="text-[10px] text-[#ececec]/40 uppercase tracking-widest block mb-1">
+                      <span className="text-[10px] text-[#ececec]/40 uppercase tracking-widest block mb-0.5">
                         Order ID
                       </span>
-                      <span className="text-xs font-mono font-bold text-[#ececec] uppercase">
-                        #{finalOrderId}
-                      </span>
-                    </div>
-                    
-                    {/* Tombol Copy dibungkus agar lebarnya pas */}
-                    <div className="w-fit sm:-mt-2">
-                      <CopyOrderButton textToCopy={finalOrderId} />
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-mono font-bold text-[#ececec] uppercase tracking-wider">
+                          #{finalOrderId}
+                        </span>
+                        <CopyOrderButton textToCopy={finalOrderId} />
+                      </div>
                     </div>
                   </div>
 

@@ -5,8 +5,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { ShoppingBag, Menu, X } from "lucide-react";
+import { ShoppingBag, Menu, X, Globe } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
+import { useCurrency } from "@/context/CurrencyContext";
+import { cn } from "@/lib/utils";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -18,6 +20,7 @@ export default function Navbar() {
   const isManualScrolling = useRef(false);
   
   const { items, openDrawer } = useCartStore();
+  const { currency, setCurrency } = useCurrency();
   const cartItemCount = items.reduce((acc, item) => acc + item.quantity, 0);
 
   const handleCartClick = () => {
@@ -114,8 +117,8 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* RIGHT SIDE: Catalogue (Desktop) + Cart (All) */}
-          <div className="flex-1 flex items-center justify-end md:justify-start md:space-x-8 md:pl-12">
+          {/* RIGHT SIDE: Catalogue (Desktop) + Currency Switcher + Cart (All) */}
+          <div className="flex-1 flex items-center justify-end md:justify-start md:space-x-6 md:pl-12">
             
             <div className="hidden md:block">
               <Link href="/shop" prefetch={true} onClick={() => handleNavClick("shop")} className={pathname === "/shop" ? activeStyle : inactiveStyle}>
@@ -123,9 +126,39 @@ export default function Navbar() {
               </Link>
             </div>
 
+            {/* Currency Switcher (Desktop) */}
+            <div className="hidden md:flex items-center bg-[#111111] border border-[#1f1f1f] rounded-full p-0.5 text-[10px] font-mono shrink-0">
+              <button
+                type="button"
+                onClick={() => setCurrency("IDR")}
+                className={cn(
+                  "px-2.5 py-1 rounded-full transition-all cursor-pointer font-bold",
+                  currency === "IDR"
+                    ? "bg-[#ececec] text-[#050505] shadow-sm"
+                    : "text-[#ececec]/50 hover:text-white"
+                )}
+                title="Switch to Indonesian Rupiah (IDR)"
+              >
+                IDR
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrency("USD")}
+                className={cn(
+                  "px-2.5 py-1 rounded-full transition-all cursor-pointer font-bold",
+                  currency === "USD"
+                    ? "bg-[#ececec] text-[#050505] shadow-sm"
+                    : "text-[#ececec]/50 hover:text-white"
+                )}
+                title="Switch to US Dollar (USD)"
+              >
+                USD
+              </button>
+            </div>
+
             <button
               onClick={handleCartClick}
-              className="flex items-center space-x-1.5 md:px-5 md:py-1.5 text-xs uppercase tracking-widest text-[#ececec]/60 hover:text-white transition-colors cursor-pointer shrink-0 p-1 md:p-0"
+              className="flex items-center space-x-1.5 md:px-4 md:py-1.5 text-xs uppercase tracking-widest text-[#ececec]/60 hover:text-white transition-colors cursor-pointer shrink-0 p-1 md:p-0"
             >
               <span className="hidden md:inline">Cart</span>
               <div className="relative">
@@ -197,6 +230,39 @@ export default function Navbar() {
           >
             Catalogue
           </Link>
+
+          {/* Mobile Currency Switcher */}
+          <div className="pt-6 border-t border-[#1f1f1f] flex flex-col gap-3">
+            <span className="text-[10px] uppercase tracking-widest text-[#ececec]/50 font-mono flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-emerald-400" /> Currency
+            </span>
+            <div className="grid grid-cols-2 gap-2 bg-[#111111] p-1 rounded-xl border border-[#1f1f1f]">
+              <button
+                type="button"
+                onClick={() => setCurrency("IDR")}
+                className={cn(
+                  "py-2 rounded-lg text-xs font-mono font-bold transition-all",
+                  currency === "IDR"
+                    ? "bg-[#ececec] text-[#050505] shadow-sm"
+                    : "text-[#ececec]/40 hover:text-white"
+                )}
+              >
+                IDR (Rp)
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurrency("USD")}
+                className={cn(
+                  "py-2 rounded-lg text-xs font-mono font-bold transition-all",
+                  currency === "USD"
+                    ? "bg-[#ececec] text-[#050505] shadow-sm"
+                    : "text-[#ececec]/40 hover:text-white"
+                )}
+              >
+                USD ($)
+              </button>
+            </div>
+          </div>
         </div>
         
         {/* Hiasan Teks Bawah */}

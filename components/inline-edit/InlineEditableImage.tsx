@@ -20,6 +20,7 @@ interface InlineEditableImageProps {
   buttonOnly?: boolean;
   children?: React.ReactNode;
   onSaveSuccess?: (newUrl: string) => void;
+  isFocused?: boolean;
 }
 
 export function InlineEditableImage({
@@ -33,6 +34,7 @@ export function InlineEditableImage({
   buttonOnly = false,
   children,
   onSaveSuccess,
+  isFocused,
 }: InlineEditableImageProps) {
   const router = useRouter();
   const { isEditMode, showToast } = useInlineEdit();
@@ -153,13 +155,15 @@ export function InlineEditableImage({
 
   const Tag = as as keyof React.JSX.IntrinsicElements;
 
+  const showMobileBadge = isFocused !== false;
+
   return (
     <>
       {buttonOnly ? (
         <button
           type="button"
           onClick={handleOpen}
-          className={`inline-flex items-center gap-1.5 bg-black/90 hover:bg-pink-600/20 text-pink-400 border border-pink-500/80 px-2.5 py-1 rounded-lg shadow-[0_0_15px_rgba(236,72,153,0.3)] backdrop-blur-md text-[9px] font-mono font-bold tracking-widest uppercase transition-all cursor-pointer ${className}`}
+          className={`inline-flex items-center justify-center gap-1.5 bg-black/90 hover:bg-pink-600/20 text-pink-400 border border-pink-500/80 px-3 py-2 sm:px-2.5 sm:py-1 min-h-[44px] sm:min-h-0 rounded-lg shadow-[0_0_15px_rgba(236,72,153,0.3)] backdrop-blur-md text-[9px] font-mono font-bold tracking-widest uppercase transition-all cursor-pointer ${className}`}
           title={`Click to edit ${label}`}
         >
           <Image
@@ -176,14 +180,18 @@ export function InlineEditableImage({
           onClick={handleOpen}
           className={`${
             as === "span" ? "inline-block" : "block"
-          } relative group/inline-edit transition-all duration-200 cursor-pointer rounded-xl hover:outline-dashed hover:outline-2 hover:outline-pink-500 hover:outline-offset-4 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] ${className}`}
+          } relative group/inline-edit transition-all duration-200 cursor-pointer rounded-xl ${
+            showMobileBadge ? "outline-dashed outline-1 outline-pink-500/40" : "outline-none"
+          } sm:outline-none hover:outline-dashed hover:outline-2 hover:outline-pink-500 hover:outline-offset-4 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] ${className}`}
           title={`Click to edit ${label}`}
         >
           {/* Rendered Children Image */}
           {children}
 
           {/* Brutalist Pink Badge with Mantra Logo */}
-          <span className="absolute top-3 right-3 opacity-0 group-hover/inline-edit:opacity-100 transition-all duration-200 pointer-events-none z-30 inline-flex items-center gap-1.5 bg-black/95 text-pink-400 border border-pink-500/80 px-2.5 py-1 rounded shadow-[0_0_15px_rgba(236,72,153,0.4)] backdrop-blur-md">
+          <span className={`absolute top-2 right-2 sm:top-3 sm:right-3 ${
+            showMobileBadge ? "opacity-100" : "opacity-0"
+          } sm:opacity-0 sm:group-hover/inline-edit:opacity-100 transition-all duration-200 pointer-events-none z-30 inline-flex items-center gap-1.5 bg-black/95 text-pink-400 border border-pink-500/80 px-2.5 py-1.5 sm:py-1 rounded shadow-[0_0_15px_rgba(236,72,153,0.4)] backdrop-blur-md`}>
             <Image
               src="/images/ICON CHROME 1.png"
               alt="Mantra"

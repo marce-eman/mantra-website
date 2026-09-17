@@ -10,7 +10,7 @@ export default async function ShopPage() {
     orderBy: { createdAt: "asc" },
     include: {
       articles: {
-        orderBy: { createdAt: "desc" },
+        orderBy: [{ articleNo: "asc" }, { createdAt: "asc" }],
       },
     },
   });

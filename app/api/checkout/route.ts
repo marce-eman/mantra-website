@@ -176,9 +176,12 @@ export async function POST(req: Request) {
       },
     };
 
-    // 3. IMPROVE ERROR LOGGING & SNAP TOKEN GENERATION
+    // 3. TARGET SANDBOX MIDTRANS API & GENERATE SNAP TOKEN
+    const snapApiUrl = "https://app.sandbox.midtrans.com/snap/v1/transactions";
+    console.log("[MIDTRANS TARGET URL]:", snapApiUrl, `(Order: ${midtransOrderId})`);
+
     try {
-      const snapRes = await fetch("https://app.sandbox.midtrans.com/snap/v1/transactions", {
+      const snapRes = await fetch(snapApiUrl, {
         method: "POST",
         headers: {
           Authorization: authHeader,
@@ -195,12 +198,15 @@ export async function POST(req: Request) {
           status: snapRes.status,
           statusText: snapRes.statusText,
           response: snapData,
+          endpoint: snapApiUrl,
         });
+
+        const rawError = snapData?.error_messages?.[0] || snapData?.message || "Failed to generate Snap token from Midtrans";
         return NextResponse.json(
           {
             success: false,
-            error: snapData?.error_messages?.[0] || snapData?.message || "Failed to generate Snap token from Midtrans",
-            message: snapData?.error_messages?.[0] || snapData?.message || "Failed to generate Snap token from Midtrans",
+            error: rawError,
+            message: rawError,
             details: snapData,
           },
           { status: 500 }

@@ -1,8 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Search, Clock, Package, Truck, CheckCircle2, XCircle, ExternalLink, MapPin, ArrowLeft, Copy, Check } from "lucide-react";
-import Link from "next/link";
+import {
+  Search,
+  Clock,
+  Package,
+  CheckCircle2,
+  XCircle,
+  ExternalLink,
+  MapPin,
+  Copy,
+  Check,
+} from "lucide-react";
+import { getTrackingUrl } from "@/lib/tracking";
 
 export default function TrackOrderPage() {
   const [orderNumber, setOrderNumber] = useState("");
@@ -10,12 +20,17 @@ export default function TrackOrderPage() {
   const [result, setResult] = useState<any>(null);
   const [error, setError] = useState("");
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  const handleCopy = (text: string, field: string) => {
+  const handleCopy = (text: string, field: string, label: string = "Tracking number") => {
     if (!text) return;
     navigator.clipboard.writeText(text);
     setCopiedField(field);
-    setTimeout(() => setCopiedField(null), 2000);
+    setToastMessage(`${label} copied to clipboard!`);
+    setTimeout(() => {
+      setCopiedField(null);
+      setToastMessage(null);
+    }, 2500);
   };
 
   const handleTrack = async (e: React.FormEvent) => {
@@ -27,7 +42,7 @@ export default function TrackOrderPage() {
     setResult(null);
 
     try {
-      const res = await fetch(`/api/track?order=${orderNumber}`);
+      const res = await fetch(`/api/track?order=${orderNumber.trim()}`);
       const data = await res.json();
 
       if (!res.ok) {
@@ -42,7 +57,7 @@ export default function TrackOrderPage() {
     }
   };
 
-  // Daftar tahapan status pesanan
+  // Order timeline status steps
   const steps = [
     { key: "PENDING", label: "Pending" },
     { key: "PAID", label: "Paid" },
@@ -54,28 +69,29 @@ export default function TrackOrderPage() {
   const currentStatus = result?.status?.toUpperCase();
   const currentIndex = statusOrder.indexOf(currentStatus);
 
-  // Fungsi untuk menentukan status visual tiap titik timeline
   const getStepStatus = (stepKey: string) => {
     if (currentStatus === "CANCELED") return "canceled";
     const stepIndex = statusOrder.indexOf(stepKey);
 
-    if (stepIndex < currentIndex) return "completed"; // Sudah terlewati
-    if (stepIndex === currentIndex) return "current";   // Posisi saat ini
-    return "upcoming";                                  // Belum sampai
+    if (stepIndex < currentIndex) return "completed";
+    if (stepIndex === currentIndex) return "current";
+    return "upcoming";
   };
+
+  const activeCourier = result?.shippingCourier || result?.courier || "Courier";
 
   return (
     <div className="min-h-screen bg-[#050505] text-[#ececec] flex flex-col items-center justify-center p-6 border-t border-[#1f1f1f]">
-
-      {/* Container Kotak Utama */}
+      {/* Main Container Card */}
       <div className="w-full max-w-xl bg-[#0a0a0a] border border-[#1f1f1f] p-8 md:p-10 rounded-2xl shadow-2xl">
-
         {/* Header Section */}
         <div className="flex flex-col items-center mb-8">
           <div className="w-12 h-12 bg-[#111111] rounded-full flex items-center justify-center mb-4 border border-[#1f1f1f]">
             <Search className="w-5 h-5 text-[#ececec]/60" />
           </div>
-          <h1 className="text-2xl font-light text-center tracking-widest uppercase font-serif">Track Order</h1>
+          <h1 className="text-2xl font-light text-center tracking-widest uppercase font-serif">
+            Track Order
+          </h1>
           <p className="text-[#ececec]/50 text-center text-xs uppercase tracking-widest mt-2 font-mono">
             Locate your parcel in the void
           </p>
@@ -96,12 +112,22 @@ export default function TrackOrderPage() {
             className="bg-[#ececec] text-[#050505] font-bold px-6 py-3.5 rounded-xl hover:bg-white transition-colors disabled:opacity-50 uppercase tracking-widest text-xs flex justify-center items-center gap-2 cursor-pointer shrink-0"
           >
             {loading ? (
-              <span className="flex items-center gap-2"><Clock className="w-4 h-4 animate-spin" /> Searching...</span>
+              <span className="flex items-center gap-2">
+                <Clock className="w-4 h-4 animate-spin" /> Searching...
+              </span>
             ) : (
               "Track"
             )}
           </button>
         </form>
+
+        {/* Toast Feedback Notification */}
+        {toastMessage && (
+          <div className="mt-4 p-3 bg-emerald-950/60 border border-emerald-500/40 text-emerald-300 text-xs font-mono rounded-xl text-center flex items-center justify-center gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
+            <Check className="w-3.5 h-3.5 text-emerald-400" />
+            <span>{toastMessage}</span>
+          </div>
+        )}
 
         {/* ERROR MESSAGE */}
         {error && (
@@ -113,7 +139,6 @@ export default function TrackOrderPage() {
         {/* TRACKING RESULT SECTION */}
         {result && (
           <div className="mt-8 border-t border-[#1f1f1f] pt-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-
             {/* SPECIAL CASE: CANCELED */}
             {currentStatus === "CANCELED" ? (
               <div className="flex items-center gap-4 p-5 rounded-xl border bg-red-950/20 border-red-950 mb-8">
@@ -137,7 +162,6 @@ export default function TrackOrderPage() {
                 </div>
 
                 <div className="relative flex items-center justify-between w-full">
-
                   {/* Background Track Line */}
                   <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-[2px] bg-[#1f1f1f] z-0" />
 
@@ -145,11 +169,11 @@ export default function TrackOrderPage() {
                   <div
                     className="absolute left-0 top-1/2 -translate-y-1/2 h-[2px] bg-[#ececec] transition-all duration-500 z-0"
                     style={{
-                      width: `${(Math.max(0, currentIndex) / (steps.length - 1)) * 100}%`
+                      width: `${(Math.max(0, currentIndex) / (steps.length - 1)) * 100}%`,
                     }}
                   />
 
-                  {/* Steps Nodes */}
+                  {/* Step Nodes */}
                   {steps.map((step, idx) => {
                     const stepState = getStepStatus(step.key);
                     const isDone = stepState === "completed" || stepState === "current";
@@ -157,22 +181,26 @@ export default function TrackOrderPage() {
                     return (
                       <div key={step.key} className="relative z-10 flex flex-col items-center">
                         <div
-                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-mono transition-all duration-300 border ${isDone
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-mono transition-all duration-300 border ${
+                            isDone
                               ? "bg-[#ececec] text-[#050505] border-white shadow-lg shadow-white/10 scale-110"
                               : "bg-[#111111] text-[#ececec]/40 border-[#2a2a2a]"
-                            }`}
+                          }`}
                         >
-                          {isDone ? <CheckCircle2 className="w-4 h-4" /> : (idx + 1)}
+                          {isDone ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
                         </div>
-                        <span className={`absolute -bottom-6 text-[10px] uppercase tracking-widest whitespace-nowrap font-mono ${isDone ? "text-[#ececec] font-bold" : "text-[#ececec]/40"
-                          }`}>
+                        <span
+                          className={`absolute -bottom-6 text-[10px] uppercase tracking-widest whitespace-nowrap font-mono ${
+                            isDone ? "text-[#ececec] font-bold" : "text-[#ececec]/40"
+                          }`}
+                        >
                           {step.label}
                         </span>
                       </div>
                     );
                   })}
                 </div>
-                <div className="mt-10" /> {/* Spacer buat label bawah */}
+                <div className="mt-10" />
               </div>
             )}
 
@@ -186,12 +214,15 @@ export default function TrackOrderPage() {
                   <span className="font-bold text-[#ececec]">{result.orderNumber}</span>
                   <button
                     type="button"
-                    onClick={() => handleCopy(result.orderNumber, "orderId")}
-                    className="p-1 hover:bg-[#222222] text-[#ececec]/60 hover:text-white rounded transition-colors cursor-pointer"
-                    title="Salin Order ID"
+                    onClick={() => handleCopy(result.orderNumber, "orderId", "Order ID")}
+                    className="p-1.5 hover:bg-[#222222] text-[#ececec]/60 hover:text-white rounded-lg transition-colors cursor-pointer flex items-center gap-1 border border-transparent hover:border-[#2a2a2a]"
+                    title="Copy Order ID"
                   >
                     {copiedField === "orderId" ? (
-                      <Check className="w-3.5 h-3.5 text-emerald-400" />
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-[10px] text-emerald-400 font-semibold">Copied</span>
+                      </>
                     ) : (
                       <Copy className="w-3.5 h-3.5" />
                     )}
@@ -210,7 +241,13 @@ export default function TrackOrderPage() {
                 <span className="text-[#ececec]/50 uppercase tracking-widest flex items-center gap-2">
                   <Package className="w-3.5 h-3.5" /> Courier
                 </span>
-                <span className="uppercase font-bold text-[#ececec]">{result.shippingCourier ? `${result.shippingCourier} ${result.shippingService ? `(${result.shippingService})` : ""}` : (result.courier || "Pending")}</span>
+                <span className="uppercase font-bold text-[#ececec]">
+                  {result.shippingCourier
+                    ? `${result.shippingCourier} ${
+                        result.shippingService ? `(${result.shippingService})` : ""
+                      }`
+                    : result.courier || "Pending"}
+                </span>
               </div>
 
               <div className="flex justify-between items-center">
@@ -219,17 +256,20 @@ export default function TrackOrderPage() {
                 </span>
                 {result.trackingNumber ? (
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-emerald-400 bg-emerald-950/30 px-2.5 py-1 rounded border border-emerald-900/50 text-xs">
+                    <span className="font-mono font-bold text-emerald-400 bg-emerald-950/30 px-2.5 py-1 rounded-lg border border-emerald-900/50 text-xs tracking-wider">
                       {result.trackingNumber}
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleCopy(result.trackingNumber, "tracking")}
-                      className="p-1 hover:bg-[#222222] text-[#ececec]/60 hover:text-white rounded transition-colors cursor-pointer"
-                      title="Salin Nomor Resi"
+                      onClick={() => handleCopy(result.trackingNumber, "tracking", "Tracking number")}
+                      className="p-1.5 hover:bg-[#222222] text-[#ececec]/60 hover:text-white rounded-lg transition-all cursor-pointer flex items-center gap-1 border border-transparent hover:border-[#2a2a2a]"
+                      title="Copy Tracking Number"
                     >
                       {copiedField === "tracking" ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-[10px] text-emerald-400 font-semibold">Copied!</span>
+                        </>
                       ) : (
                         <Copy className="w-3.5 h-3.5" />
                       )}
@@ -243,31 +283,25 @@ export default function TrackOrderPage() {
               </div>
             </div>
 
-            {/* EXTERNAL LIVE TRACKING BUTTON */}
-            {result.trackingNumber && result.courier && (
-              <a
-                href={`https://parcelsapp.com/en/tracking/${result.trackingNumber}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-6 w-full flex items-center justify-center gap-2 border border-[#2a2a2a] text-[#ececec] py-3.5 rounded-xl hover:bg-[#111111] transition-colors text-xs uppercase tracking-widest font-bold cursor-pointer"
-              >
-                Live Tracking <ExternalLink className="w-4 h-4" />
-              </a>
+            {/* EXTERNAL LIVE TRACKING PORTAL BUTTON */}
+            {result.trackingNumber && (
+              <div className="mt-6 space-y-2">
+                <a
+                  href={getTrackingUrl(result.shippingCourier || result.courier)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full flex items-center justify-center gap-2 bg-[#ececec] text-[#050505] hover:bg-white py-3.5 rounded-xl transition-all text-xs uppercase tracking-widest font-bold cursor-pointer shadow-lg shadow-white/5"
+                >
+                  Live Tracking ({activeCourier}) <ExternalLink className="w-4 h-4" />
+                </a>
+                <p className="text-[10px] text-center text-[#ececec]/40 font-mono">
+                  * Opens {activeCourier} official portal in a new tab. Paste your copied tracking number to track live parcel movements.
+                </p>
+              </div>
             )}
           </div>
         )}
       </div>
-
-      {/* --- TOMBOL KEMBALI (Ditambahkan di sini) --- */}
-      <div className="mt-8 flex items-center justify-center">
-        <Link
-          href="/"
-          className="text-[#ececec]/50 hover:text-white flex items-center gap-2 text-[10px] uppercase tracking-widest transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back to Home
-        </Link>
-      </div>
-
     </div>
   );
 }

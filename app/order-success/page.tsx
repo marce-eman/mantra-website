@@ -90,11 +90,12 @@ export default async function OrderSuccessPage({
             <span className="text-[10px] font-mono text-[#ececec]/40 uppercase tracking-widest block mt-4 mb-2">
               ORDER REFERENCE
             </span>
-            <span className="text-base md:text-xl font-mono font-bold text-emerald-400 tracking-wider">
-              #{finalOrderId}
-            </span>
-            
-            <CopyOrderButton textToCopy={finalOrderId} />
+            <div className="flex items-center justify-center gap-1.5">
+              <span className="text-base md:text-xl font-mono font-bold text-emerald-400 tracking-wider">
+                #{finalOrderId}
+              </span>
+              <CopyOrderButton textToCopy={finalOrderId} />
+            </div>
           </div>
         </div>
 

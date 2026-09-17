@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ArrowLeft, PlayCircle, XCircle } from "lucide-react";
@@ -20,13 +20,31 @@ export default function ArticleClient({
   recommendedEpisode: any;
 }) {
   const carouselRef = useRef<HTMLDivElement>(null);
+  const recommendedGridRef = useRef<HTMLDivElement>(null);
+  const [activeGalleryIdx, setActiveGalleryIdx] = useState<number>(0);
+  const [activeRecCardId, setActiveRecCardId] = useState<string | null>(null);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
 
-  const scrollCarousel = (direction: "left" | "right") => {
-    if (carouselRef.current) {
-      const scrollAmount = direction === "left" ? -300 : 300;
-      carouselRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+  const scrollToGalleryIndex = (idx: number) => {
+    if (!carouselRef.current) return;
+    const container = carouselRef.current;
+    const children = Array.from(container.children) as HTMLElement[];
+    if (children[idx]) {
+      const child = children[idx];
+      const targetLeft =
+        child.offsetLeft - (container.clientWidth - child.clientWidth) / 2;
+      container.scrollTo({ left: Math.max(0, targetLeft), behavior: "smooth" });
     }
+  };
+
+  const handlePrevGallery = () => {
+    const newIdx = Math.max(0, activeGalleryIdx - 1);
+    scrollToGalleryIndex(newIdx);
+  };
+
+  const handleNextGallery = () => {
+    const newIdx = Math.min(galleryImagesState.length - 1, activeGalleryIdx + 1);
+    scrollToGalleryIndex(newIdx);
   };
 
   // Convert YouTube URL to Embed URL
@@ -50,20 +68,14 @@ export default function ArticleClient({
     article?.heroImage || article?.images?.[0] || "/images/ARTICLES STORIES.png"
   );
   const introBody =
-    article?.storyIntro ||
-    (isDummy
-      ? "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit."
-      : "");
+    article?.storyIntro?.trim() ||
+    "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit.";
   const leftBody =
-    article?.storyLeft ||
-    (isDummy
-      ? "sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit."
-      : "");
+    article?.storyLeft?.trim() ||
+    "sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit.";
   const rightBody =
-    article?.storyRight ||
-    (isDummy
-      ? "Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"
-      : "");
+    article?.storyRight?.trim() ||
+    "Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?";
 
   const [galleryImagesState, setGalleryImagesState] = useState<string[]>(
     article?.galleryImages && article.galleryImages.length > 0
@@ -84,15 +96,11 @@ export default function ArticleClient({
     image: getAssetUrl(article?.editorialImage || "/images/Rectangle 31.png"),
     caption: article?.editorialCaption || "+ Headline",
     body:
-      article?.editorialBody ||
-      (isDummy
-        ? "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dita sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur."
-        : ""),
+      article?.editorialBody?.trim() ||
+      "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dita sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur.",
     bodyRight:
-      article?.editorialBodyRight ||
-      (isDummy
-        ? "Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?"
-        : ""),
+      article?.editorialBodyRight?.trim() ||
+      "Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?",
     imageRight: getAssetUrl(article?.editorialImageRight || "/images/Rectangle 33.png"),
   };
 
@@ -110,9 +118,105 @@ export default function ArticleClient({
       type: "article",
       id: article.id,
       field: "galleryImages",
-      value: nextGallery,
+      value: JSON.stringify(nextGallery),
     });
   };
+
+  // Synchronize active gallery slide indicator with carousel scroll
+  const updateActiveGallerySlide = useCallback(() => {
+    if (!carouselRef.current) return;
+    const container = carouselRef.current;
+    const containerRect = container.getBoundingClientRect();
+    const containerCenter = containerRect.left + containerRect.width / 2;
+
+    const children = Array.from(container.children) as HTMLElement[];
+    if (children.length === 0) return;
+
+    let closestIdx = 0;
+    let minDistance = Infinity;
+
+    children.forEach((child, idx) => {
+      const rect = child.getBoundingClientRect();
+      const childCenter = rect.left + rect.width / 2;
+      const distance = Math.abs(containerCenter - childCenter);
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestIdx = idx;
+      }
+    });
+
+    setActiveGalleryIdx(closestIdx);
+  }, []);
+
+  useEffect(() => {
+    updateActiveGallerySlide();
+    const container = carouselRef.current;
+    if (!container) return;
+
+    let rafId: number;
+    const handleScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateActiveGallerySlide);
+    };
+
+    container.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("resize", handleScroll, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      container.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("resize", handleScroll);
+    };
+  }, [updateActiveGallerySlide, galleryImagesState]);
+
+  // Dynamic Center Viewport Detection for Recommended Articles (Single-Focus Title on mobile)
+  const updateRecCenterFocus = useCallback(() => {
+    if (!recommendedGridRef.current) return;
+    const cards = recommendedGridRef.current.querySelectorAll<HTMLElement>("[data-rec-card]");
+    if (cards.length === 0) return;
+
+    const viewportCenterY = window.innerHeight / 2;
+    let closestId: string | null = null;
+    let minDistance = Infinity;
+
+    cards.forEach((card) => {
+      const rect = card.getBoundingClientRect();
+      const cardCenterY = rect.top + rect.height / 2;
+      const distance = Math.abs(viewportCenterY - cardCenterY);
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closestId = card.getAttribute("data-rec-card");
+      }
+    });
+
+    if (minDistance < window.innerHeight * 0.45) {
+      setActiveRecCardId(closestId);
+    } else {
+      setActiveRecCardId(null);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!recommendedEpisode) return;
+
+    updateRecCenterFocus();
+
+    let rafId: number;
+    const handleScrollRaf = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(updateRecCenterFocus);
+    };
+
+    window.addEventListener("scroll", handleScrollRaf, { passive: true });
+    window.addEventListener("resize", handleScrollRaf, { passive: true });
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("scroll", handleScrollRaf);
+      window.removeEventListener("resize", handleScrollRaf);
+    };
+  }, [recommendedEpisode, updateRecCenterFocus]);
 
   // Video Modal
   const VideoModal = () =>
@@ -461,22 +565,39 @@ export default function ArticleClient({
             ))}
           </div>
 
-          <div className="flex justify-center items-center gap-8 mt-6">
+          <div className="flex justify-center items-center gap-6 sm:gap-8 mt-6">
             <button
-              onClick={() => scrollCarousel("left")}
-              className="text-[#111]/50 hover:text-[#111] transition-colors cursor-pointer"
+              type="button"
+              onClick={handlePrevGallery}
+              disabled={activeGalleryIdx === 0}
+              className="text-[#111]/60 hover:text-[#111] transition-all disabled:opacity-20 disabled:hover:text-[#111]/60 cursor-pointer p-1"
+              aria-label="Previous gallery image"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className="flex gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#111]"></span>
-              <span className="w-2 h-2 rounded-full bg-[#111]/30"></span>
-              <span className="w-2 h-2 rounded-full bg-[#111]/30"></span>
-              <span className="w-2 h-2 rounded-full bg-[#111]/30"></span>
+
+            <div className="flex gap-2.5 items-center">
+              {galleryImagesState.map((_, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => scrollToGalleryIndex(idx)}
+                  aria-label={`Go to image ${idx + 1}`}
+                  className={`transition-all duration-300 rounded-full cursor-pointer ${
+                    activeGalleryIdx === idx
+                      ? "w-6 h-2 bg-[#111]"
+                      : "w-2 h-2 bg-[#111]/30 hover:bg-[#111]/70"
+                  }`}
+                />
+              ))}
             </div>
+
             <button
-              onClick={() => scrollCarousel("right")}
-              className="text-[#111]/50 hover:text-[#111] transition-colors cursor-pointer"
+              type="button"
+              onClick={handleNextGallery}
+              disabled={activeGalleryIdx === galleryImagesState.length - 1}
+              className="text-[#111]/60 hover:text-[#111] transition-all disabled:opacity-20 disabled:hover:text-[#111]/60 cursor-pointer p-1"
+              aria-label="Next gallery image"
             >
               <ArrowRight className="w-5 h-5" />
             </button>
@@ -737,7 +858,7 @@ export default function ArticleClient({
       ───────────────────────────────────────── */}
       {recommendedEpisode &&
         (() => {
-          const epItems =
+          const rawEpItems =
             recommendedEpisode.articles && recommendedEpisode.articles.length > 0
               ? recommendedEpisode.articles.map((art: any, idx: number) => ({
                   id: art.id,
@@ -747,6 +868,10 @@ export default function ArticleClient({
                   articleNo: art.articleNo || `00${idx + 1}`,
                 }))
               : [];
+
+          const epItems = [...rawEpItems].sort((a: any, b: any) =>
+            (a.articleNo || "").localeCompare(b.articleNo || "", undefined, { numeric: true })
+          );
 
           if (epItems.length === 0) return null;
 
@@ -764,93 +889,130 @@ export default function ArticleClient({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-                  {epItems.map((item: any) => {
-                    const isRealRecArt = Boolean(item?.id && !item.id.match(/^\d+$/));
-
-                    return (
-                      <Link
-                        key={item.id}
-                        href={`/articles/${item.slug}`}
-                        className="relative overflow-hidden rounded-2xl border border-[#1f1f1f]/80 group aspect-[3/4] bg-black/30 block cursor-pointer transition-all duration-500 hover:-translate-y-2"
-                      >
-                        {isRealRecArt ? (
-                          <InlineEditableImage
-                            type="article"
-                            id={item.id}
-                            field="heroImage"
-                            label="Article Photo"
-                            value={item.image}
-                            className="w-full h-full"
-                          >
-                            <Image
-                              src={item.image}
-                              alt={item.title}
-                              fill
-                              className="object-cover grayscale opacity-75 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 rounded-2xl"
-                            />
-                          </InlineEditableImage>
-                        ) : (
-                          <Image
-                            src={item.image}
-                            alt={item.title}
-                            fill
-                            className="object-cover grayscale opacity-75 group-hover:grayscale-0 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700 rounded-2xl"
-                          />
-                        )}
-
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl z-10 pointer-events-none" />
-
-                        <div className="absolute bottom-6 left-4 right-4 translate-y-4 opacity-0 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 z-20 pointer-events-none">
-                          <div className="bg-black/80 backdrop-blur-md border border-[#1f1f1f] p-4 rounded-xl shadow-xl pointer-events-auto">
-                            <div className="text-[#ececec]/60 text-[9px] uppercase tracking-widest mb-1">
-                              <span className="text-[#ececec] font-bold mr-1">+</span>
-                              {isRealRecArt ? (
-                                <InlineEditableText
-                                  type="article"
-                                  id={item.id}
-                                  field="articleNo"
-                                  label="Article Number"
-                                  value={item.articleNo}
-                                  as="span"
-                                >
-                                  <span>Article No.{item.articleNo}</span>
-                                </InlineEditableText>
-                              ) : (
-                                <span>Article No.{item.articleNo}</span>
-                              )}
-                            </div>
-
-                            <h3 className="text-[#ececec] text-sm font-light tracking-wide mb-2 truncate">
-                              {isRealRecArt ? (
-                                <InlineEditableText
-                                  type="article"
-                                  id={item.id}
-                                  field="name"
-                                  label="Article Title"
-                                  value={item.title}
-                                  as="span"
-                                >
-                                  <span>{item.title}</span>
-                                </InlineEditableText>
-                              ) : (
-                                item.title
-                              )}
-                            </h3>
-
-                            <div className="text-[#ececec]/60 text-[9px] uppercase tracking-widest flex items-center gap-2 hover:text-white transition-colors">
-                              Learn more <ArrowRight className="w-3 h-3" />
-                            </div>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                <div ref={recommendedGridRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                  {epItems.map((item: any) => (
+                    <RecommendedArticleCard
+                      key={item.id}
+                      item={item}
+                      isFocused={activeRecCardId === item.id}
+                    />
+                  ))}
                 </div>
               </div>
             </section>
           );
         })()}
+    </div>
+  );
+}
+
+function RecommendedArticleCard({
+  item,
+  isFocused = false,
+}: {
+  item: any;
+  isFocused?: boolean;
+}) {
+  const isRealRecArt = Boolean(item?.id && !item.id.match(/^\d+$/));
+
+  return (
+    <div
+      data-rec-card={item.id}
+      className="relative group transition-all duration-300 ease-out"
+    >
+      <Link
+        href={`/articles/${item.slug}`}
+        className={`relative overflow-hidden rounded-2xl border border-transparent hover:border-[#1f1f1f] group aspect-[3/4] bg-black/30 block cursor-pointer transition-all duration-500 hover:-translate-y-2 ${
+          isFocused ? "shadow-[0_0_35px_rgba(0,0,0,0.9)]" : ""
+        }`}
+      >
+        {isRealRecArt ? (
+          <InlineEditableImage
+            type="article"
+            id={item.id}
+            field="heroImage"
+            label="Article Photo"
+            value={item.image}
+            className="w-full h-full"
+            isFocused={isFocused}
+          >
+            <Image
+              src={item.image}
+              alt={item.title}
+              fill
+              className={`object-cover transition-all duration-500 rounded-2xl ${
+                isFocused ? "grayscale-0 opacity-100" : "grayscale opacity-75"
+              } md:grayscale md:opacity-75 md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-105`}
+            />
+          </InlineEditableImage>
+        ) : (
+          <Image
+            src={item.image}
+            alt={item.title}
+            fill
+            className={`object-cover transition-all duration-500 rounded-2xl ${
+              isFocused ? "grayscale-0 opacity-100" : "grayscale opacity-75"
+            } md:grayscale md:opacity-75 md:group-hover:grayscale-0 md:group-hover:opacity-100 md:group-hover:scale-105`}
+          />
+        )}
+
+        {/* Soft Dark Gradient: Visible when isFocused on mobile, Hover on desktop */}
+        <div
+          className={`absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent transition-opacity duration-300 rounded-2xl z-10 pointer-events-none ${
+            isFocused ? "opacity-100" : "opacity-0"
+          } md:opacity-0 md:group-hover:opacity-100`}
+        />
+
+        {/* Dynamic Center Viewport Title Box: Slides up & visible on focused card in mobile, Hover on desktop */}
+        <div
+          className={`absolute bottom-4 left-3 right-3 sm:bottom-6 sm:left-4 sm:right-4 transition-all duration-300 ease-out z-20 ${
+            isFocused
+              ? "opacity-100 translate-y-0 pointer-events-auto"
+              : "opacity-0 translate-y-4 pointer-events-none"
+          } md:opacity-0 md:translate-y-4 md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto`}
+        >
+          <div className="bg-black/85 backdrop-blur-md border border-[#1f1f1f] p-3.5 sm:p-4 rounded-xl shadow-xl pointer-events-auto">
+            <div className="text-[#ececec]/60 text-[9px] uppercase tracking-widest mb-1">
+              <span className="text-[#ececec] font-bold mr-1">+</span>
+              {isRealRecArt ? (
+                <InlineEditableText
+                  type="article"
+                  id={item.id}
+                  field="articleNo"
+                  label="Article Number"
+                  value={item.articleNo}
+                  as="span"
+                >
+                  <span>Article No.{item.articleNo}</span>
+                </InlineEditableText>
+              ) : (
+                <span>Article No.{item.articleNo}</span>
+              )}
+            </div>
+
+            <h3 className="text-[#ececec] text-sm font-light tracking-wide mb-1.5 sm:mb-2 truncate">
+              {isRealRecArt ? (
+                <InlineEditableText
+                  type="article"
+                  id={item.id}
+                  field="name"
+                  label="Article Title"
+                  value={item.title}
+                  as="span"
+                >
+                  <span>{item.title}</span>
+                </InlineEditableText>
+              ) : (
+                item.title
+              )}
+            </h3>
+
+            <div className="text-[#ececec]/60 text-[9px] uppercase tracking-widest flex items-center gap-2 hover:text-white transition-colors">
+              Learn more <ArrowRight className="w-3 h-3" />
+            </div>
+          </div>
+        </div>
+      </Link>
     </div>
   );
 }

@@ -9,7 +9,7 @@ export default async function Home() {
     orderBy: { createdAt: "asc" },
     include: {
       articles: {
-        orderBy: { createdAt: "asc" },
+        orderBy: [{ articleNo: "asc" }, { createdAt: "asc" }],
       },
     },
   });

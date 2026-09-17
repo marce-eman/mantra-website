@@ -121,14 +121,14 @@ export function InlineEditableText({
         onClick={handleOpen}
         className={`${
           as === "span" ? "inline-block" : "block"
-        } relative group/inline-edit transition-all duration-200 cursor-pointer rounded-lg hover:outline-dashed hover:outline-2 hover:outline-pink-500 hover:outline-offset-4 hover:shadow-[0_0_20px_rgba(236,72,153,0.2)] ${className}`}
+        } relative group/inline-edit transition-all duration-200 cursor-pointer rounded-lg outline-dashed outline-1 outline-pink-500/30 sm:outline-none hover:outline-dashed hover:outline-2 hover:outline-pink-500 hover:outline-offset-4 hover:shadow-[0_0_20px_rgba(236,72,153,0.2)] ${className}`}
         title={`Click to edit ${label}`}
       >
         {/* Rendered Children Content */}
         {children}
 
-        {/* Brutalist Pink Edit Badge with Mantra Icon */}
-        <span className="absolute -top-3 right-2 opacity-0 group-hover/inline-edit:opacity-100 transition-all duration-200 pointer-events-none z-30 inline-flex items-center gap-1.5 bg-black/95 text-pink-400 border border-pink-500/80 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(236,72,153,0.4)] backdrop-blur-md">
+        {/* Brutalist Pink Edit Badge with Mantra Icon (Always visible on mobile, hover on desktop) */}
+        <span className="absolute -top-3 right-1 sm:right-2 opacity-100 sm:opacity-0 sm:group-hover/inline-edit:opacity-100 transition-all duration-200 pointer-events-none z-30 inline-flex items-center gap-1 bg-black/95 text-pink-400 border border-pink-500/80 px-2 py-0.5 rounded shadow-[0_0_12px_rgba(236,72,153,0.4)] backdrop-blur-md">
           <Image
             src="/images/ICON CHROME 1.png"
             alt="Mantra"
@@ -136,7 +136,7 @@ export function InlineEditableText({
             height={11}
             className="object-contain opacity-90 animate-pulse"
           />
-          <span className="text-[9px] font-mono font-bold tracking-widest uppercase">
+          <span className="text-[8px] sm:text-[9px] font-mono font-bold tracking-widest uppercase">
             [ EDIT // {label.toUpperCase()} ]
           </span>
         </span>

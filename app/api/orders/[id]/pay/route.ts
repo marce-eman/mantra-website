@@ -113,7 +113,10 @@ export async function POST(
       },
     };
 
-    const snapRes = await fetch("https://app.sandbox.midtrans.com/snap/v1/transactions", {
+    const snapApiUrl = "https://app.sandbox.midtrans.com/snap/v1/transactions";
+    console.log("[MIDTRANS TARGET URL]:", snapApiUrl, `(Repay Order: ${midtransOrderId})`);
+
+    const snapRes = await fetch(snapApiUrl, {
       method: "POST",
       headers: {
         Authorization: authHeader,
@@ -127,10 +130,11 @@ export async function POST(
 
     if (!snapRes.ok || !snapData?.token) {
       console.error("[MIDTRANS REPAY SNAP ERROR]:", snapData);
+      const rawError = snapData?.error_messages?.[0] || snapData?.message || "Failed to generate Snap token";
       return NextResponse.json(
         {
           success: false,
-          error: snapData?.error_messages?.[0] || snapData?.message || "Failed to generate Snap token",
+          error: rawError,
         },
         { status: 500 }
       );
