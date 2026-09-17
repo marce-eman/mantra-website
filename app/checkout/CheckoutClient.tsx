@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Script from "next/script";
@@ -44,11 +44,21 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Helper to extract 5-digit postal code from saved user address if available
+  const extractPostalCode = (addr: string | null | undefined): string => {
+    if (!addr) return "";
+    const match = addr.match(/\b(\d{5})\b/);
+    return match ? match[1] : "";
+  };
+
+  const initialPostal = extractPostalCode(user?.address) || "";
+
   // Form Inputs
   const [nameInput, setNameInput] = useState(user?.name || "");
   const [emailInput, setEmailInput] = useState(user?.email || "");
   const [phoneInput, setPhoneInput] = useState("");
-  const [postalCodeInput, setPostalCodeInput] = useState("12340");
+  const [postalCodeInput, setPostalCodeInput] = useState(initialPostal);
+  const [destinationPostalCode, setDestinationPostalCode] = useState(initialPostal);
   const [addressInput, setAddressInput] = useState(user?.address || "");
 
   // Shipping Rates & Selection (Biteship)
@@ -61,8 +71,9 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
   const grandTotal = subtotal + shippingCost;
 
   // Fetch Shipping Rates from Biteship API
-  const fetchShippingRates = async (postalCode: string) => {
-    if (!postalCode.trim() || items.length === 0) return;
+  const fetchShippingRates = useCallback(async (postalCode: string) => {
+    const cleanedZip = postalCode.trim();
+    if (!cleanedZip || items.length === 0) return;
 
     setIsLoadingRates(true);
     setErrorMsg("");
@@ -72,7 +83,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          destination_postal_code: postalCode.trim(),
+          destination_postal_code: cleanedZip,
           items: items.map((item) => ({
             productId: item.id,
             name: item.name,
@@ -85,12 +96,20 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
       const data = await res.json();
       if (data.success && Array.isArray(data.rates) && data.rates.length > 0) {
         setShippingRates(data.rates);
-        // Default to first rate if none selected
-        if (!selectedRate) {
-          setSelectedRate(data.rates[0]);
-        }
+        // Automatically retain or pick the first available rate
+        setSelectedRate((prev) => {
+          if (!prev) return data.rates[0];
+          const matched = data.rates.find(
+            (r: ShippingRate) =>
+              r.courier_code === prev.courier_code &&
+              r.courier_service_code === prev.courier_service_code
+          );
+          return matched || data.rates[0];
+        });
       } else {
-        setErrorMsg(data.message || "Failed to load shipping rates.");
+        setShippingRates([]);
+        setSelectedRate(null);
+        setErrorMsg(data.message || `No courier rates found for postal code: ${cleanedZip}`);
       }
     } catch (err) {
       console.error("Rates fetch error:", err);
@@ -98,6 +117,23 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
     } finally {
       setIsLoadingRates(false);
     }
+  }, [items]);
+
+  // Re-fetch dynamics: automatically calculate shipping rates when postal code or cart items change
+  useEffect(() => {
+    const cleanedPostal = destinationPostalCode.trim();
+    if (cleanedPostal.length >= 4 && items.length > 0) {
+      const timer = setTimeout(() => {
+        fetchShippingRates(cleanedPostal);
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [destinationPostalCode, items, fetchShippingRates]);
+
+  // Handle postal code input change & sync destinationPostalCode
+  const handlePostalCodeChange = (val: string) => {
+    setPostalCodeInput(val);
+    setDestinationPostalCode(val.trim());
   };
 
   // Step 1 -> Step 2 validation & rate calculation
@@ -108,7 +144,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
     }
     setErrorMsg("");
     setCurrentStep(2);
-    await fetchShippingRates(postalCodeInput);
+    await fetchShippingRates(postalCodeInput.trim());
   };
 
   // Step 2 -> Step 3 validation
@@ -328,9 +364,9 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. 12340 / 40115"
+                        placeholder="e.g. 78121 (Pontianak) / 12340"
                         value={postalCodeInput}
-                        onChange={(e) => setPostalCodeInput(e.target.value)}
+                        onChange={(e) => handlePostalCodeChange(e.target.value)}
                         className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-sm focus:outline-none focus:border-[#ececec] rounded-xl font-mono"
                       />
                     </div>
@@ -342,7 +378,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                     </label>
                     <textarea
                       rows={3}
-                      placeholder="e.g. Jl. Arcanum No. 7, Kebayoran Baru, Jakarta Selatan"
+                      placeholder="e.g. Jl. Gajah Mada No. 88, Benua Melayu Darat, Pontianak Selatan, Kota Pontianak"
                       value={addressInput}
                       onChange={(e) => setAddressInput(e.target.value)}
                       className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-sm focus:outline-none focus:border-[#ececec] rounded-xl"
@@ -394,16 +430,16 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                     <div className="py-12 text-center flex flex-col items-center justify-center space-y-3">
                       <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
                       <p className="text-xs uppercase tracking-widest text-[#ececec]/60 font-mono">
-                        Querying Biteship Couriers...
+                        Calculating rates for postal code {destinationPostalCode || postalCodeInput}...
                       </p>
                     </div>
                   ) : shippingRates.length === 0 ? (
                     <div className="text-center py-8 space-y-4">
                       <p className="text-xs text-[#ececec]/50 uppercase tracking-widest">
-                        No courier rates available for postal code {postalCodeInput}.
+                        No courier rates available for postal code {destinationPostalCode || postalCodeInput || "—"}.
                       </p>
                       <button
-                        onClick={() => fetchShippingRates(postalCodeInput)}
+                        onClick={() => fetchShippingRates(destinationPostalCode || postalCodeInput)}
                         className="border border-[#2a2a2a] text-xs uppercase tracking-widest px-4 py-2 rounded-lg hover:bg-[#111111]"
                       >
                         Retry Fetching Rates
@@ -412,7 +448,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                   ) : (
                     <div className="space-y-3">
                       <p className="text-[11px] uppercase tracking-widest text-[#ececec]/50 font-mono mb-2">
-                        Select preferred courier for postal code: <span className="text-emerald-400 font-bold">{postalCodeInput}</span>
+                        FOR POSTAL CODE: <span className="text-emerald-400 font-bold">{destinationPostalCode || postalCodeInput || "—"}</span>
                       </p>
 
                       {shippingRates.map((rate, idx) => {

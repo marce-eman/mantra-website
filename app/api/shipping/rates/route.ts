@@ -66,6 +66,7 @@ export async function POST(req: Request) {
 
     const apiKey = process.env.BITESHIP_API_KEY;
     const originLocationId = process.env.BITESHIP_ORIGIN_LOCATION_ID;
+    const originPostalCode = process.env.BITESHIP_ORIGIN_POSTAL_CODE ? Number(process.env.BITESHIP_ORIGIN_POSTAL_CODE) : 12930;
 
     if (!apiKey) {
       console.warn("[BITESHIP]: BITESHIP_API_KEY is not configured in environment variables.");
@@ -79,13 +80,14 @@ export async function POST(req: Request) {
     if (originLocationId) {
       biteshipPayload.origin_location_id = originLocationId;
     } else {
-      biteshipPayload.origin_postal_code = 12930;
+      biteshipPayload.origin_postal_code = originPostalCode;
     }
 
+    // Dynamic destination from user input (e.g. Pontianak, Jakarta, etc.)
     if (destination_area_id) {
       biteshipPayload.destination_area_id = destination_area_id;
-    } else {
-      biteshipPayload.destination_postal_code = Number(destination_postal_code) || 12340;
+    } else if (destination_postal_code) {
+      biteshipPayload.destination_postal_code = Number(String(destination_postal_code).trim());
     }
 
     let rates: any[] = [];
@@ -104,7 +106,7 @@ export async function POST(req: Request) {
 
       const biteshipData = await biteshipRes.json();
 
-      if (biteshipRes.ok && biteshipData?.pricing && Array.isArray(biteshipData.pricing)) {
+      if (biteshipRes.ok && biteshipData?.pricing && Array.isArray(biteshipData.pricing) && biteshipData.pricing.length > 0) {
         rates = biteshipData.pricing.map((rate: any) => ({
           courier_name: (rate.courier_name || rate.courier_code || "").toUpperCase(),
           courier_code: rate.courier_code,
@@ -122,7 +124,7 @@ export async function POST(req: Request) {
       console.error("[BITESHIP FETCH ERROR]:", fetchErr);
     }
 
-    // Graceful fallback rates if live API returned empty or failed in testing
+    // Graceful fallback rates if live API returned empty or during testing without valid courier coverage
     if (rates.length === 0) {
       const totalWeightGrams = biteshipItems.reduce(
         (sum, item) => sum + item.weight * item.quantity,
@@ -173,6 +175,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       isLive,
+      destinationPostalCode: destination_postal_code || null,
+      destinationAreaId: destination_area_id || null,
       rates,
     });
   } catch (error: any) {
