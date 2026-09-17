@@ -83,12 +83,18 @@ export async function POST(req: Request) {
       biteshipPayload.origin_postal_code = originPostalCode;
     }
 
-    // Dynamic destination from user input (e.g. Pontianak, Jakarta, etc.)
+    // Dynamic destination from user request body
+    const postalCodeClean = destination_postal_code
+      ? Number(String(destination_postal_code).replace(/\D/g, ""))
+      : null;
+
     if (destination_area_id) {
       biteshipPayload.destination_area_id = destination_area_id;
-    } else if (destination_postal_code) {
-      biteshipPayload.destination_postal_code = Number(String(destination_postal_code).trim());
+    } else if (postalCodeClean) {
+      biteshipPayload.destination_postal_code = postalCodeClean;
     }
+
+    console.log("[BITESHIP RATE REQUEST PAYLOAD]:", JSON.stringify(biteshipPayload, null, 2));
 
     let rates: any[] = [];
     let isLive = false;
@@ -105,6 +111,8 @@ export async function POST(req: Request) {
       });
 
       const biteshipData = await biteshipRes.json();
+      console.log(`[BITESHIP RATE RESPONSE STATUS]: ${biteshipRes.status}`);
+      console.log("[BITESHIP RATE RESPONSE DATA]:", JSON.stringify(biteshipData, null, 2));
 
       if (biteshipRes.ok && biteshipData?.pricing && Array.isArray(biteshipData.pricing) && biteshipData.pricing.length > 0) {
         rates = biteshipData.pricing.map((rate: any) => ({
@@ -118,7 +126,7 @@ export async function POST(req: Request) {
         }));
         isLive = true;
       } else {
-        console.warn("[BITESHIP API WARNING]:", biteshipData?.message || biteshipData);
+        console.warn("[BITESHIP API WARNING / NO PRICING]:", biteshipData?.message || biteshipData);
       }
     } catch (fetchErr) {
       console.error("[BITESHIP FETCH ERROR]:", fetchErr);

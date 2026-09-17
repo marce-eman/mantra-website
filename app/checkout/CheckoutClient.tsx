@@ -31,6 +31,7 @@ interface CheckoutClientProps {
     id: string;
     name: string | null;
     email: string | null;
+    whatsapp?: string | null;
     address: string | null;
   } | null;
   whatsappNumber?: string;
@@ -44,6 +45,15 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
+  // Validation errors state
+  const [errors, setErrors] = useState<{
+    name?: string;
+    email?: string;
+    phone?: string;
+    postalCode?: string;
+    address?: string;
+  }>({});
+
   // Helper to extract 5-digit postal code from saved user address if available
   const extractPostalCode = (addr: string | null | undefined): string => {
     if (!addr) return "";
@@ -51,12 +61,20 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
     return match ? match[1] : "";
   };
 
+  // Helper to extract Indonesian phone number from saved address
+  const extractPhone = (addr: string | null | undefined): string => {
+    if (!addr) return "";
+    const match = addr.match(/(?:\+62|62|0)8[1-9][0-9]{6,11}/);
+    return match ? match[0] : "";
+  };
+
   const initialPostal = extractPostalCode(user?.address) || "";
+  const initialPhone = user?.whatsapp || extractPhone(user?.address) || "";
 
   // Form Inputs
   const [nameInput, setNameInput] = useState(user?.name || "");
   const [emailInput, setEmailInput] = useState(user?.email || "");
-  const [phoneInput, setPhoneInput] = useState("");
+  const [phoneInput, setPhoneInput] = useState(initialPhone);
   const [postalCodeInput, setPostalCodeInput] = useState(initialPostal);
   const [destinationPostalCode, setDestinationPostalCode] = useState(initialPostal);
   const [addressInput, setAddressInput] = useState(user?.address || "");
@@ -76,10 +94,9 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
     if (!cleanedZip || items.length === 0) return;
 
     setIsLoadingRates(true);
-    setErrorMsg("");
 
     try {
-      const res = await fetch("/api/shipping/rates", {
+      const res = await fetch("/api/biteship/rates", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -109,11 +126,9 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
       } else {
         setShippingRates([]);
         setSelectedRate(null);
-        setErrorMsg(data.message || `No courier rates found for postal code: ${cleanedZip}`);
       }
     } catch (err) {
       console.error("Rates fetch error:", err);
-      setErrorMsg("Network error while calculating shipping.");
     } finally {
       setIsLoadingRates(false);
     }
@@ -130,18 +145,60 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
     }
   }, [destinationPostalCode, items, fetchShippingRates]);
 
-  // Handle postal code input change & sync destinationPostalCode
+  // Handle postal code input change & sync destinationPostalCode & clear inline error
   const handlePostalCodeChange = (val: string) => {
     setPostalCodeInput(val);
     setDestinationPostalCode(val.trim());
+    if (errors.postalCode) {
+      setErrors((prev) => ({ ...prev, postalCode: undefined }));
+    }
+  };
+
+  // Handle address input change & auto-detect postal code and phone & clear inline error
+  const handleAddressChange = (val: string) => {
+    setAddressInput(val);
+    if (errors.address) {
+      setErrors((prev) => ({ ...prev, address: undefined }));
+    }
+    const detectedPostal = extractPostalCode(val);
+    if (detectedPostal && (!postalCodeInput || postalCodeInput === initialPostal)) {
+      setPostalCodeInput(detectedPostal);
+      setDestinationPostalCode(detectedPostal);
+      if (errors.postalCode) {
+        setErrors((prev) => ({ ...prev, postalCode: undefined }));
+      }
+    }
+    const detectedPhone = extractPhone(val);
+    if (detectedPhone && !phoneInput) {
+      setPhoneInput(detectedPhone);
+      if (errors.phone) {
+        setErrors((prev) => ({ ...prev, phone: undefined }));
+      }
+    }
   };
 
   // Step 1 -> Step 2 validation & rate calculation
   const handleProceedToShipping = async () => {
-    if (!nameInput.trim() || !phoneInput.trim() || !addressInput.trim() || !postalCodeInput.trim()) {
-      setErrorMsg("Please complete all required shipping fields including postal code.");
+    const newErrors: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      postalCode?: string;
+      address?: string;
+    } = {};
+
+    if (!nameInput.trim()) newErrors.name = "Full name is required";
+    if (!emailInput.trim()) newErrors.email = "Email address is required";
+    if (!phoneInput.trim()) newErrors.phone = "Phone number is required";
+    if (!postalCodeInput.trim()) newErrors.postalCode = "Postal code is required";
+    if (!addressInput.trim()) newErrors.address = "Full address is required";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
+
+    setErrors({});
     setErrorMsg("");
     setCurrentStep(2);
     await fetchShippingRates(postalCodeInput.trim());
@@ -281,7 +338,7 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
           
           {/* Left Column: 3-Step Wizard */}
           <div className="lg:col-span-7 space-y-6">
-            {errorMsg && (
+            {errorMsg && currentStep !== 1 && (
               <div className="p-4 bg-red-950/50 border border-red-800/50 text-red-400 text-xs rounded-xl uppercase tracking-widest text-center">
                 {errorMsg}
               </div>
@@ -327,9 +384,22 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                         type="text"
                         placeholder="e.g. Marcus Aurelius"
                         value={nameInput}
-                        onChange={(e) => setNameInput(e.target.value)}
-                        className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-sm focus:outline-none focus:border-[#ececec] rounded-xl"
+                        onChange={(e) => {
+                          setNameInput(e.target.value);
+                          if (errors.name) setErrors((prev) => ({ ...prev, name: undefined }));
+                        }}
+                        className={cn(
+                          "w-full bg-[#111111] p-3 text-sm focus:outline-none rounded-xl transition-all",
+                          errors.name
+                            ? "border border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-red-100 placeholder:text-red-300/40"
+                            : "border border-[#1f1f1f] focus:border-[#ececec]"
+                        )}
                       />
+                      {errors.name && (
+                        <p className="text-red-400 text-[11px] font-mono mt-1.5">
+                          {errors.name}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-widest text-[#ececec]/50 block mb-1 font-mono">
@@ -339,9 +409,22 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                         type="email"
                         placeholder="e.g. client@mantra.com"
                         value={emailInput}
-                        onChange={(e) => setEmailInput(e.target.value)}
-                        className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-sm focus:outline-none focus:border-[#ececec] rounded-xl"
+                        onChange={(e) => {
+                          setEmailInput(e.target.value);
+                          if (errors.email) setErrors((prev) => ({ ...prev, email: undefined }));
+                        }}
+                        className={cn(
+                          "w-full bg-[#111111] p-3 text-sm focus:outline-none rounded-xl transition-all",
+                          errors.email
+                            ? "border border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-red-100 placeholder:text-red-300/40"
+                            : "border border-[#1f1f1f] focus:border-[#ececec]"
+                        )}
                       />
+                      {errors.email && (
+                        <p className="text-red-400 text-[11px] font-mono mt-1.5">
+                          {errors.email}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -354,9 +437,22 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                         type="tel"
                         placeholder="e.g. 081234567890"
                         value={phoneInput}
-                        onChange={(e) => setPhoneInput(e.target.value)}
-                        className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-sm focus:outline-none focus:border-[#ececec] rounded-xl"
+                        onChange={(e) => {
+                          setPhoneInput(e.target.value);
+                          if (errors.phone) setErrors((prev) => ({ ...prev, phone: undefined }));
+                        }}
+                        className={cn(
+                          "w-full bg-[#111111] p-3 text-sm focus:outline-none rounded-xl transition-all",
+                          errors.phone
+                            ? "border border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-red-100 placeholder:text-red-300/40"
+                            : "border border-[#1f1f1f] focus:border-[#ececec]"
+                        )}
                       />
+                      {errors.phone && (
+                        <p className="text-red-400 text-[11px] font-mono mt-1.5">
+                          {errors.phone}
+                        </p>
+                      )}
                     </div>
                     <div>
                       <label className="text-[10px] uppercase tracking-widest text-[#ececec]/50 block mb-1 font-mono">
@@ -364,11 +460,21 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                       </label>
                       <input
                         type="text"
-                        placeholder="e.g. 78121 (Pontianak) / 12340"
+                        placeholder="e.g. 78118 (Pontianak) / 12340"
                         value={postalCodeInput}
                         onChange={(e) => handlePostalCodeChange(e.target.value)}
-                        className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-sm focus:outline-none focus:border-[#ececec] rounded-xl font-mono"
+                        className={cn(
+                          "w-full bg-[#111111] p-3 text-sm focus:outline-none rounded-xl font-mono transition-all",
+                          errors.postalCode
+                            ? "border border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-red-100 placeholder:text-red-300/40"
+                            : "border border-[#1f1f1f] focus:border-[#ececec]"
+                        )}
                       />
+                      {errors.postalCode && (
+                        <p className="text-red-400 text-[11px] font-mono mt-1.5">
+                          {errors.postalCode}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -380,9 +486,19 @@ export default function CheckoutClient({ user }: CheckoutClientProps) {
                       rows={3}
                       placeholder="e.g. Jl. Gajah Mada No. 88, Benua Melayu Darat, Pontianak Selatan, Kota Pontianak"
                       value={addressInput}
-                      onChange={(e) => setAddressInput(e.target.value)}
-                      className="w-full bg-[#111111] border border-[#1f1f1f] p-3 text-sm focus:outline-none focus:border-[#ececec] rounded-xl"
+                      onChange={(e) => handleAddressChange(e.target.value)}
+                      className={cn(
+                        "w-full bg-[#111111] p-3 text-sm focus:outline-none rounded-xl transition-all",
+                        errors.address
+                          ? "border border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 text-red-100 placeholder:text-red-300/40"
+                          : "border border-[#1f1f1f] focus:border-[#ececec]"
+                      )}
                     />
+                    {errors.address && (
+                      <p className="text-red-400 text-[11px] font-mono mt-1.5">
+                        {errors.address}
+                      </p>
+                    )}
                   </div>
 
                   <button

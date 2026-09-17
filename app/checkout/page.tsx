@@ -19,6 +19,7 @@ export default async function CheckoutPage() {
       id: true,
       name: true,
       email: true,
+      whatsapp: true,
       address: true,
     },
   });
